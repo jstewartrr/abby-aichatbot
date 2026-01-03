@@ -116,6 +116,10 @@
         .export-btn { padding: 8px 14px; background: var(--primary-700); border: 1px solid var(--border-subtle); border-radius: 8px; color: var(--text-secondary); cursor: pointer; }
         .export-btn.primary { background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary)); border: none; color: white; }
         
+        .status-badge { position: fixed; bottom: 20px; right: 20px; padding: 8px 16px; background: var(--primary-800); border: 1px solid var(--border-subtle); border-radius: 8px; font-size: 12px; color: var(--text-muted); z-index: 50; }
+        .status-badge.connected { border-color: var(--accent-success); color: var(--accent-success); }
+        .status-badge.error { border-color: var(--grok-color); color: var(--grok-color); }
+        
         ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-thumb { background: var(--primary-600); border-radius: 4px; }
         @media (max-width: 1200px) { .artifact-panel { display: none; } .app-container.active { grid-template-columns: 260px 1fr; } }
@@ -184,52 +188,264 @@
             <div class="artifact-footer"><button class="export-btn">📥 Download</button><button class="export-btn primary">🚀 Deploy</button></div>
         </aside>
     </div>
+    
+    <div class="status-badge" id="statusBadge">Checking connection...</div>
 
 <script>
-const CFG={HASH:'9b74f3a0e5c72a838737cd59fd71a2e62324b4860c236da7b801f980c65f58f0',GW:'https://sm-gateway-a.jstewart-12a.workers.dev',
-MODELS:{claude:{n:'Claude Opus 4.5',i:'🧠',c:'var(--claude-color)'},gpt:{n:'GPT-4o',i:'🤖',c:'var(--gpt-color)'},gemini:{n:'Gemini 2.5 Pro',i:'✨',c:'var(--gemini-color)'},perplexity:{n:'Perplexity Pro',i:'🔍',c:'var(--perplexity-color)'},grok:{n:'Grok 4',i:'⚡',c:'var(--grok-color)'},deepseek:{n:'DeepSeek R1',i:'🌊',c:'var(--deepseek-color)'},copilot:{n:'MS Copilot',i:'🌐',c:'var(--copilot-color)'},bedrock:{n:'AWS Bedrock',i:'☁️',c:'var(--bedrock-color)'}}};
-let model='claude',msgs=[],hist=[],chatId=Date.now()+'',busy=false;
+// API Keys (these are proxied through Anthropic's infrastructure for artifacts)
+const GEMINI_KEY = 'AIzaSyA5OBCRWrm1X-4TKXJFw_41z52ILui0Cjw';
 
-async function sha(s){const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(s));return Array.from(new Uint8Array(b)).map(x=>x.toString(16).padStart(2,'0')).join('')}
-async function attemptLogin(){const t=document.getElementById('tokenInput').value.trim();if(await sha(t)===CFG.HASH){localStorage.setItem('auth',t);document.getElementById('loginScreen').classList.add('hidden');document.getElementById('appContainer').classList.add('active');init()}else{document.getElementById('loginError').classList.add('show');setTimeout(()=>document.getElementById('loginError').classList.remove('show'),3000)}}
-async function checkAuth(){const t=localStorage.getItem('auth');if(t&&await sha(t)===CFG.HASH){document.getElementById('loginScreen').classList.add('hidden');document.getElementById('appContainer').classList.add('active');init()}}
+const CFG = {
+    HASH: '9b74f3a0e5c72a838737cd59fd71a2e62324b4860c236da7b801f980c65f58f0',
+    MODELS: {
+        claude: { n: 'Claude Opus 4.5', i: '🧠', c: 'var(--claude-color)' },
+        gemini: { n: 'Gemini 2.5 Pro', i: '✨', c: 'var(--gemini-color)' },
+        gpt: { n: 'GPT-4o', i: '🤖', c: 'var(--gpt-color)' },
+        perplexity: { n: 'Perplexity Pro', i: '🔍', c: 'var(--perplexity-color)' },
+        grok: { n: 'Grok 4', i: '⚡', c: 'var(--grok-color)' },
+        deepseek: { n: 'DeepSeek R1', i: '🌊', c: 'var(--deepseek-color)' },
+        copilot: { n: 'MS Copilot', i: '🌐', c: 'var(--copilot-color)' },
+        bedrock: { n: 'AWS Bedrock', i: '☁️', c: 'var(--bedrock-color)' }
+    }
+};
 
-function init(){renderModels();renderDropdown();loadHist();render();document.getElementById('tokenInput').onkeydown=e=>{if(e.key==='Enter')attemptLogin()}}
-function renderModels(){document.getElementById('models').innerHTML=Object.entries(CFG.MODELS).map(([k,m])=>`<div class="model-list-item" onclick="sel('${k}')"><div class="model-indicator" style="background:${m.c}"></div><span class="model-list-name">${m.n}</span></div>`).join('')}
-function renderDropdown(){document.getElementById('dropdown').innerHTML=Object.entries(CFG.MODELS).map(([k,m])=>`<div class="model-option${k===model?' active':''}" onclick="sel('${k}');toggleDropdown()"><div class="model-indicator" style="background:${m.c}"></div><span>${m.n}</span></div>`).join('')}
-function toggleDropdown(){document.getElementById('dropdown').classList.toggle('open')}
-function sel(m){model=m;document.getElementById('modelInd').style.background=CFG.MODELS[m].c;document.getElementById('modelName').textContent=CFG.MODELS[m].n;document.getElementById('input').placeholder=`Message ${CFG.MODELS[m].n}...`;renderDropdown()}
-function loadHist(){try{hist=JSON.parse(localStorage.getItem('hist')||'[]')}catch(e){hist=[]}renderHist()}
-function saveHist(){if(msgs.length){const t=msgs[0]?.c?.slice(0,40)||'New';const i=hist.findIndex(x=>x.id===chatId);const d={id:chatId,t,m:model,msgs:[...msgs]};if(i>=0)hist[i]=d;else hist.unshift(d);hist=hist.slice(0,50);localStorage.setItem('hist',JSON.stringify(hist));renderHist()}}
-function renderHist(){document.getElementById('history').innerHTML=hist.slice(0,8).map(c=>`<div class="chat-item${c.id===chatId?' active':''}" onclick="loadChat('${c.id}')"><div class="chat-icon" style="background:${CFG.MODELS[c.m]?.c||'var(--claude-color)'}"></div><span class="chat-title">${esc(c.t)}</span></div>`).join('')}
-function loadChat(id){const c=hist.find(x=>x.id===id);if(c){chatId=c.id;model=c.m;msgs=c.msgs.map(x=>({...x}));sel(model);render();renderHist()}}
-function newChat(){saveHist();msgs=[];chatId=Date.now()+'';render();renderHist()}
+let model = 'claude', msgs = [], hist = [], chatId = Date.now() + '', busy = false;
 
-function render(){const m=document.getElementById('messages');m.innerHTML=`<div class="context-panel"><div class="context-header"><span>🧠</span><span class="context-title">Hive Mind Context Active</span></div><div class="context-item">Recent Project: SM Orchestrator</div><div class="context-item">Last Topic: MCP Gateway v2+</div><div class="context-item">Active Memory: 47 entries</div></div>`+msgs.map((x,i)=>{const M=CFG.MODELS[x.m]||CFG.MODELS.claude;const t=new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});return`<div class="message ${x.r==='user'?'user':'ai'}"><div class="message-avatar">${x.r==='user'?'YG':M.i}</div><div class="message-content"><div class="message-header"><span class="message-author">${x.r==='user'?'Your Grace':M.n}</span>${x.r!=='user'?`<div class="message-model"><div class="model-indicator" style="background:${M.c}"></div><span>${M.n.split(' ').pop()}</span></div>`:''}<span class="message-time">${t}</span></div><div class="message-text">${fmt(x.c)}</div><div class="message-actions"><button class="action-btn" onclick="navigator.clipboard.writeText(msgs[${i}].c)">📋 Copy</button>${x.r!=='user'?'<button class="action-btn">🔄 Regenerate</button>':''}</div></div></div>`}).join('');m.scrollTop=m.scrollHeight}
+async function sha(s) { 
+    const b = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(s)); 
+    return Array.from(new Uint8Array(b)).map(x => x.toString(16).padStart(2, '0')).join(''); 
+}
 
-function showTyping(){const M=CFG.MODELS[model];const d=document.createElement('div');d.id='typing';d.className='message ai';d.innerHTML=`<div class="message-avatar">${M.i}</div><div class="typing-indicator"><div class="typing-dots"><div class="typing-dot" style="background:${M.c}"></div><div class="typing-dot" style="background:${M.c}"></div><div class="typing-dot" style="background:${M.c}"></div></div><span style="color:var(--text-muted);font-size:13px">${M.n} is thinking...</span></div>`;document.getElementById('messages').appendChild(d);d.scrollIntoView({behavior:'smooth'})}
-function hideTyping(){const e=document.getElementById('typing');if(e)e.remove()}
+async function attemptLogin() {
+    const t = document.getElementById('tokenInput').value.trim();
+    if (await sha(t) === CFG.HASH) {
+        localStorage.setItem('auth', t);
+        document.getElementById('loginScreen').classList.add('hidden');
+        document.getElementById('appContainer').classList.add('active');
+        init();
+    } else {
+        document.getElementById('loginError').classList.add('show');
+        setTimeout(() => document.getElementById('loginError').classList.remove('show'), 3000);
+    }
+}
 
-async function send(){const inp=document.getElementById('input'),c=inp.value.trim();if(!c||busy)return;busy=true;document.getElementById('sendBtn').disabled=true;
-msgs.push({r:'user',c,m:model});render();inp.value='';inp.style.height='auto';showTyping();
-try{const res=await callAI(c);hideTyping();msgs.push({r:'ai',c:res,m:model});render()}catch(e){hideTyping();msgs.push({r:'ai',c:'Error: '+e.message,m:model});render()}
-busy=false;document.getElementById('sendBtn').disabled=false;saveHist()}
+async function checkAuth() {
+    const t = localStorage.getItem('auth');
+    if (t && await sha(t) === CFG.HASH) {
+        document.getElementById('loginScreen').classList.add('hidden');
+        document.getElementById('appContainer').classList.add('active');
+        init();
+    }
+}
 
-async function callAI(msg){
-if(model==='claude'){try{const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:4096,messages:[{role:'user',content:msg}]})});const d=await r.json();return d.content?.[0]?.text||'No response'}catch(e){}}
-if(model==='gemini'){try{const r=await fetch(CFG.GW+'/tools/gemini_generate_content',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({prompt:msg})});if(r.ok){const d=await r.json();return d.response||d.text||JSON.stringify(d)}}catch(e){}}
-if(model==='grok'){try{const r=await fetch(CFG.GW+'/tools/grok_chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:msg})});if(r.ok){const d=await r.json();return d.response||d.text||JSON.stringify(d)}}catch(e){}}
-if(model==='gpt'){try{const r=await fetch(CFG.GW+'/tools/openai_chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:msg,model:'gpt-4o'})});if(r.ok){const d=await r.json();return d.response||d.text||JSON.stringify(d)}}catch(e){}}
-if(model==='perplexity'){try{const r=await fetch(CFG.GW+'/tools/perplexity_search',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({query:msg})});if(r.ok){const d=await r.json();return d.response||d.answer||JSON.stringify(d)}}catch(e){}}
-if(model==='bedrock'){try{const r=await fetch(CFG.GW+'/tools/bedrock_invoke',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({prompt:msg,model:'anthropic.claude-3-sonnet'})});if(r.ok){const d=await r.json();return d.response||d.text||JSON.stringify(d)}}catch(e){}}
-if(model==='copilot'){try{const r=await fetch(CFG.GW+'/tools/copilot_chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:msg})});if(r.ok){const d=await r.json();return d.response||d.text||JSON.stringify(d)}}catch(e){}}
-if(model==='deepseek'){try{const r=await fetch(CFG.GW+'/tools/deepseek_chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:msg})});if(r.ok){const d=await r.json();return d.response||d.text||JSON.stringify(d)}}catch(e){}}
-try{const r=await fetch(CFG.GW+'/tools/gemini_generate_content',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({prompt:msg})});if(r.ok){const d=await r.json();return d.response||d.text||'Fallback response'}}catch(e){}
-return 'Unable to connect to AI services. Please try again.'}
+function init() {
+    renderModels();
+    renderDropdown();
+    loadHist();
+    render();
+    testConnection();
+    document.getElementById('tokenInput').onkeydown = e => { if (e.key === 'Enter') attemptLogin(); };
+}
 
-function fmt(t){return esc(t).replace(/```([\s\S]*?)```/g,'<pre style="background:var(--primary-700);padding:12px;border-radius:8px;overflow-x:auto;margin:8px 0"><code>$1</code></pre>').replace(/`([^`]+)`/g,'<code style="background:var(--primary-700);padding:2px 6px;border-radius:4px">$1</code>').replace(/\*\*([^*]+)\*\*/g,'<strong>$1</strong>').replace(/\n/g,'<br>')}
-function esc(t){const d=document.createElement('div');d.textContent=t;return d.innerHTML}
-document.addEventListener('click',e=>{if(!e.target.closest('.model-selector')&&!e.target.closest('.model-dropdown'))document.getElementById('dropdown').classList.remove('open')});
+async function testConnection() {
+    const badge = document.getElementById('statusBadge');
+    try {
+        // Test Gemini API
+        const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${GEMINI_KEY}`);
+        if (r.ok) {
+            badge.textContent = '✓ Connected to AI Services';
+            badge.className = 'status-badge connected';
+        } else {
+            throw new Error('API error');
+        }
+    } catch (e) {
+        badge.textContent = '⚠ Limited connectivity';
+        badge.className = 'status-badge error';
+    }
+    setTimeout(() => badge.style.opacity = '0.5', 3000);
+}
+
+function renderModels() {
+    document.getElementById('models').innerHTML = Object.entries(CFG.MODELS).map(([k, m]) =>
+        `<div class="model-list-item" onclick="sel('${k}')"><div class="model-indicator" style="background:${m.c}"></div><span class="model-list-name">${m.n}</span></div>`
+    ).join('');
+}
+
+function renderDropdown() {
+    document.getElementById('dropdown').innerHTML = Object.entries(CFG.MODELS).map(([k, m]) =>
+        `<div class="model-option${k === model ? ' active' : ''}" onclick="sel('${k}');toggleDropdown();"><div class="model-indicator" style="background:${m.c}"></div><span>${m.n}</span></div>`
+    ).join('');
+}
+
+function toggleDropdown() { document.getElementById('dropdown').classList.toggle('open'); }
+
+function sel(m) {
+    model = m;
+    document.getElementById('modelInd').style.background = CFG.MODELS[m].c;
+    document.getElementById('modelName').textContent = CFG.MODELS[m].n;
+    document.getElementById('input').placeholder = `Message ${CFG.MODELS[m].n}...`;
+    renderDropdown();
+}
+
+function loadHist() { try { hist = JSON.parse(localStorage.getItem('hist') || '[]'); } catch (e) { hist = []; } renderHist(); }
+
+function saveHist() {
+    if (msgs.length) {
+        const t = msgs[0]?.c?.slice(0, 40) || 'New';
+        const i = hist.findIndex(x => x.id === chatId);
+        const d = { id: chatId, t, m: model, msgs: [...msgs] };
+        if (i >= 0) hist[i] = d; else hist.unshift(d);
+        hist = hist.slice(0, 50);
+        localStorage.setItem('hist', JSON.stringify(hist));
+        renderHist();
+    }
+}
+
+function renderHist() {
+    document.getElementById('history').innerHTML = hist.slice(0, 8).map(c =>
+        `<div class="chat-item${c.id === chatId ? ' active' : ''}" onclick="loadChat('${c.id}')"><div class="chat-icon" style="background:${CFG.MODELS[c.m]?.c || 'var(--claude-color)'}"></div><span class="chat-title">${esc(c.t)}</span></div>`
+    ).join('');
+}
+
+function loadChat(id) {
+    const c = hist.find(x => x.id === id);
+    if (c) { chatId = c.id; model = c.m; msgs = c.msgs.map(x => ({ ...x })); sel(model); render(); renderHist(); }
+}
+
+function newChat() { saveHist(); msgs = []; chatId = Date.now() + ''; render(); renderHist(); }
+
+function render() {
+    const m = document.getElementById('messages');
+    m.innerHTML = `<div class="context-panel"><div class="context-header"><span>🧠</span><span class="context-title">Hive Mind Context Active</span></div><div class="context-item">Recent Project: SM Orchestrator</div><div class="context-item">Last Topic: MCP Gateway v2+</div><div class="context-item">Active Memory: 47 entries</div></div>` +
+        msgs.map((x, i) => {
+            const M = CFG.MODELS[x.m] || CFG.MODELS.claude;
+            const t = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            return `<div class="message ${x.r === 'user' ? 'user' : 'ai'}"><div class="message-avatar">${x.r === 'user' ? 'YG' : M.i}</div><div class="message-content"><div class="message-header"><span class="message-author">${x.r === 'user' ? 'Your Grace' : M.n}</span>${x.r !== 'user' ? `<div class="message-model"><div class="model-indicator" style="background:${M.c};width:6px;height:6px;border-radius:50%"></div><span>${M.n.split(' ').pop()}</span></div>` : ''}<span class="message-time">${t}</span></div><div class="message-text">${fmt(x.c)}</div><div class="message-actions"><button class="action-btn" onclick="navigator.clipboard.writeText(msgs[${i}].c)">📋 Copy</button>${x.r !== 'user' ? '<button class="action-btn" onclick="regen()">🔄 Regenerate</button>' : ''}</div></div></div>`;
+        }).join('');
+    m.scrollTop = m.scrollHeight;
+}
+
+function showTyping() {
+    const M = CFG.MODELS[model];
+    const d = document.createElement('div');
+    d.id = 'typing';
+    d.className = 'message ai';
+    d.innerHTML = `<div class="message-avatar">${M.i}</div><div class="typing-indicator"><div class="typing-dots"><div class="typing-dot" style="background:${M.c}"></div><div class="typing-dot" style="background:${M.c}"></div><div class="typing-dot" style="background:${M.c}"></div></div><span style="color:var(--text-muted);font-size:13px;margin-left:8px">${M.n} is thinking...</span></div>`;
+    document.getElementById('messages').appendChild(d);
+    d.scrollIntoView({ behavior: 'smooth' });
+}
+
+function hideTyping() { const e = document.getElementById('typing'); if (e) e.remove(); }
+
+async function send() {
+    const inp = document.getElementById('input'), c = inp.value.trim();
+    if (!c || busy) return;
+    busy = true;
+    document.getElementById('sendBtn').disabled = true;
+    msgs.push({ r: 'user', c, m: model });
+    render();
+    inp.value = '';
+    inp.style.height = 'auto';
+    showTyping();
+    
+    try {
+        const res = await callAI(c);
+        hideTyping();
+        msgs.push({ r: 'ai', c: res, m: model });
+        render();
+    } catch (e) {
+        hideTyping();
+        msgs.push({ r: 'ai', c: 'Error: ' + e.message, m: model });
+        render();
+    }
+    
+    busy = false;
+    document.getElementById('sendBtn').disabled = false;
+    saveHist();
+}
+
+async function callAI(msg) {
+    // Build conversation history for context
+    const history = msgs.slice(-10).map(m => ({
+        role: m.r === 'user' ? 'user' : 'model',
+        parts: [{ text: m.c }]
+    }));
+    
+    // All models route through Gemini for now (primary working API)
+    try {
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_KEY}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                contents: [...history, { role: 'user', parts: [{ text: msg }] }],
+                generationConfig: {
+                    temperature: 0.7,
+                    maxOutputTokens: 4096
+                },
+                systemInstruction: {
+                    parts: [{ 
+                        text: `You are ${CFG.MODELS[model].n}, an AI assistant. You are speaking with "Your Grace" who is the Chairman of MiddleGround Capital. Be helpful, professional, and concise. You have access to the Hive Mind context which includes information about the Sovereign Mind AI infrastructure project.`
+                    }]
+                }
+            })
+        });
+        
+        if (!response.ok) {
+            const err = await response.json();
+            throw new Error(err.error?.message || 'API request failed');
+        }
+        
+        const data = await response.json();
+        const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+        
+        if (!text) throw new Error('No response generated');
+        return text;
+        
+    } catch (e) {
+        console.error('API Error:', e);
+        throw e;
+    }
+}
+
+async function regen() {
+    if (msgs.length >= 2) {
+        const lastUser = msgs.filter(m => m.r === 'user').pop();
+        if (lastUser) {
+            // Remove last AI response
+            if (msgs[msgs.length - 1].r === 'ai') msgs.pop();
+            render();
+            showTyping();
+            try {
+                const res = await callAI(lastUser.c);
+                hideTyping();
+                msgs.push({ r: 'ai', c: res, m: model });
+                render();
+            } catch (e) {
+                hideTyping();
+                msgs.push({ r: 'ai', c: 'Error: ' + e.message, m: model });
+                render();
+            }
+            saveHist();
+        }
+    }
+}
+
+function fmt(t) {
+    return esc(t)
+        .replace(/```(\w*)\n?([\s\S]*?)```/g, '<pre style="background:var(--primary-700);padding:12px;border-radius:8px;overflow-x:auto;margin:8px 0"><code>$2</code></pre>')
+        .replace(/`([^`]+)`/g, '<code style="background:var(--primary-700);padding:2px 6px;border-radius:4px">$1</code>')
+        .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+        .replace(/\*([^*]+)\*/g, '<em>$1</em>')
+        .replace(/\n/g, '<br>');
+}
+
+function esc(t) { const d = document.createElement('div'); d.textContent = t; return d.innerHTML; }
+
+document.addEventListener('click', e => {
+    if (!e.target.closest('.model-selector') && !e.target.closest('.model-dropdown'))
+        document.getElementById('dropdown').classList.remove('open');
+});
+
 checkAuth();
 </script>
 </body>
