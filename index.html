@@ -50,8 +50,6 @@
         .model-indicator{width:10px;height:10px;border-radius:50%;box-shadow:0 0 12px currentColor}
         .model-name{font-weight:600;font-size:14px}
         .model-chevron{color:var(--text-muted);font-size:12px}
-        .voice-btn{width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,var(--accent-primary),var(--accent-secondary));border:none;color:white;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:transform .2s}
-        .voice-btn:hover{transform:scale(1.05)}
         .user-avatar{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--accent-primary),var(--gemini-color));display:flex;align-items:center;justify-content:center;font-weight:600;font-size:14px;cursor:pointer}
         .sidebar{background:var(--primary-800);border-right:1px solid var(--border-subtle);padding:16px;overflow-y:auto;display:flex;flex-direction:column;gap:24px}
         .sidebar-section{display:flex;flex-direction:column;gap:8px}
@@ -157,7 +155,7 @@
         <header class="header">
             <div class="logo">
                 <div class="logo-icon">AI</div>
-                <span class="logo-text">ABBI-AI.com</span>
+                <span class="logo-text">ABBI-AIchatbot.com</span>
             </div>
             <nav class="header-nav">
                 <button class="nav-btn active" data-page="chat">Chat</button>
@@ -168,7 +166,7 @@
             <div class="header-actions">
                 <div class="model-selector" id="modelSelector">
                     <div class="model-indicator" id="modelDot" style="background:var(--claude-color)"></div>
-                    <span class="model-name" id="modelLabel">Claude Opus 4.5</span>
+                    <span class="model-name" id="modelLabel">Claude Sonnet 4</span>
                     <span class="model-chevron">▾</span>
                 </div>
                 <div class="status-badge online" id="statusBadge">
@@ -221,7 +219,7 @@
                 <div class="sidebar-title">Available Models</div>
                 <div class="model-list-item" onclick="selectModel('claude')">
                     <div class="model-indicator" style="background:var(--claude-color);box-shadow:0 0 8px var(--claude-color)"></div>
-                    <span class="model-list-name">Claude Opus 4.5 ⭐</span>
+                    <span class="model-list-name">Claude Sonnet 4 ⭐</span>
                 </div>
                 <div class="model-list-item" onclick="selectModel('gemini')">
                     <div class="model-indicator" style="background:var(--gemini-color);box-shadow:0 0 8px var(--gemini-color)"></div>
@@ -248,7 +246,7 @@
                     <div class="context-items">
                         <div class="context-item">MCP Gateway: <span id="toolCount">Loading...</span> tools available</div>
                         <div class="context-item">Session: <span id="sessionId">--</span></div>
-                        <div class="context-item">Model: <span id="contextModel">Claude Opus 4.5</span></div>
+                        <div class="context-item">Model: <span id="contextModel">Claude Sonnet 4</span></div>
                     </div>
                     <div class="context-manage">
                         <a onclick="refreshGateway()">Refresh Gateway →</a>
@@ -300,7 +298,7 @@
                         <div class="stat-label">Backends</div>
                     </div>
                     <div class="stat-card">
-                        <div class="stat-value" id="statHive">4,208</div>
+                        <div class="stat-value" id="statHive">4,700+</div>
                         <div class="stat-label">Hive Entries</div>
                     </div>
                     <div class="stat-card">
@@ -321,11 +319,11 @@
 <script>
 const CONFIG = {
     gateway: 'https://mamktfczh9.us-east-1.awsapprunner.com',
-    claudeProxy: 'https://sm-switch-07-abbi.jstewart-12a.workers.dev'
+    claudeAPI: '/api/chat'
 };
 
 const MODELS = {
-    claude: { name: 'Claude Opus 4.5', color: 'var(--claude-color)', api: 'claude' },
+    claude: { name: 'Claude Sonnet 4', color: 'var(--claude-color)', api: 'claude' },
     gemini: { name: 'Gemini 2.0 Flash', color: 'var(--gemini-color)', api: 'gemini' },
     grok: { name: 'Grok 2', color: 'var(--grok-color)', api: 'grok' },
     gpt: { name: 'GPT-4o', color: 'var(--gpt-color)', api: 'gpt' }
@@ -574,25 +572,20 @@ Be helpful, concise, and address the user as "Your Grace" when appropriate.`;
 
     const messages = state.conversationHistory.slice(-10);
     
-    const response = await fetch(CONFIG.claudeProxy + '/chat', {
+    const response = await fetch(CONFIG.claudeAPI, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
             model: 'claude-sonnet-4-20250514',
             max_tokens: 4096,
             system: systemPrompt,
-            messages: messages,
-            tools: state.tools.slice(0, 50).map(t => ({
-                name: t.name,
-                description: t.description || t.name,
-                input_schema: t.inputSchema || { type: 'object', properties: {} }
-            }))
+            messages: messages
         })
     });
     
     if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`Claude API error: ${response.status}`);
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error?.message || `API error: ${response.status}`);
     }
     
     const data = await response.json();
@@ -605,11 +598,6 @@ Be helpful, concise, and address the user as "Your Grace" when appropriate.`;
                 text += block.text;
             } else if (block.type === 'tool_use') {
                 toolCalls.push({ name: block.name, input: block.input });
-                try {
-                    await executeTool(block.name, block.input);
-                } catch (e) {
-                    console.log('Tool execution error:', e);
-                }
             }
         }
     }
@@ -618,11 +606,7 @@ Be helpful, concise, and address the user as "Your Grace" when appropriate.`;
 }
 
 async function callGatewayAI(message) {
-    const endpoint = {
-        gemini: CONFIG.gateway + '/mcp',
-        grok: CONFIG.gateway + '/mcp',
-        gpt: CONFIG.gateway + '/mcp'
-    }[state.model];
+    const endpoint = CONFIG.gateway + '/mcp';
     
     const toolName = {
         gemini: 'gemini_generate_content',
@@ -656,20 +640,6 @@ async function callGatewayAI(message) {
     } catch (e) {
         throw new Error('Failed to call ' + MODELS[state.model].name);
     }
-}
-
-async function executeTool(name, input) {
-    const response = await fetch(CONFIG.gateway + '/mcp', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-            jsonrpc: '2.0',
-            method: 'tools/call',
-            params: { name, arguments: input },
-            id: Date.now()
-        })
-    });
-    return response.json();
 }
 
 function newChat() {
