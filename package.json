@@ -1,0 +1,13 @@
+{
+  "name": "abby-aichatbot",
+  "version": "4.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "vercel dev",
+    "build": "echo 'Static site - no build needed'",
+    "start": "vercel dev"
+  },
+  "dependencies": {
+    "snowflake-sdk": "^1.14.0"
+  }
+}
