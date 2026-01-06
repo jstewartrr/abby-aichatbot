@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ABBI - Adaptive Second Brain Intelligence</title>
+    <title>ABBI-AI.com - Adaptive Second Brain Intelligence</title>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -18,7 +18,9 @@
             --claude-color: #D97706;
             --gpt-color: #10B981;
             --gemini-color: #6366F1;
+            --perplexity-color: #14B8A6;
             --grok-color: #EF4444;
+            --deepseek-color: #3B82F6;
             --text-primary: #F8FAFC;
             --text-secondary: #94A3B8;
             --text-muted: #64748B;
@@ -26,56 +28,102 @@
             --border-accent: rgba(79, 140, 255, 0.3);
         }
         *{margin:0;padding:0;box-sizing:border-box}
-        html,body{height:100%;overflow:hidden}
-        body{font-family:'Inter',sans-serif;background:var(--primary-900);color:var(--text-primary)}
-        .app-container{display:flex;flex-direction:column;height:100vh}
-        .header{background:var(--primary-800);border-bottom:1px solid var(--border-subtle);display:flex;align-items:center;justify-content:space-between;padding:0 24px;height:60px;flex-shrink:0}
+        body{font-family:'Inter',sans-serif;background:var(--primary-900);color:var(--text-primary);height:100vh;overflow:hidden}
+        .app-container{display:grid;grid-template-columns:260px 1fr 380px;grid-template-rows:60px 1fr;height:100vh;gap:0}
+        @media(max-width:1200px){.app-container{grid-template-columns:260px 1fr}.artifact-panel{display:none}}
+        @media(max-width:768px){.app-container{grid-template-columns:1fr}.sidebar{display:none}}
+        .header{grid-column:1/-1;background:var(--primary-800);border-bottom:1px solid var(--border-subtle);display:flex;align-items:center;justify-content:space-between;padding:0 24px}
         .logo{display:flex;align-items:center;gap:12px}
         .logo-icon{width:36px;height:36px;background:linear-gradient(135deg,var(--accent-primary),var(--accent-secondary));border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px}
         .logo-text{font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:20px;background:linear-gradient(135deg,var(--text-primary),var(--text-secondary));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+        .header-nav{display:flex;align-items:center;gap:8px}
+        .nav-btn{background:transparent;border:none;color:var(--text-secondary);padding:10px 16px;border-radius:8px;font-size:14px;font-weight:500;cursor:pointer;transition:all .2s}
+        .nav-btn:hover{background:var(--primary-700);color:var(--text-primary)}
+        .nav-btn.active{background:var(--primary-700);color:var(--accent-primary)}
         .header-actions{display:flex;align-items:center;gap:16px}
-        .model-selector{display:flex;align-items:center;gap:10px;background:var(--primary-700);padding:8px 16px;border-radius:10px;cursor:pointer;border:1px solid var(--border-subtle)}
+        .model-selector{display:flex;align-items:center;gap:10px;background:var(--primary-700);padding:8px 16px;border-radius:10px;cursor:pointer;border:1px solid var(--border-subtle);transition:all .2s}
+        .model-selector:hover{border-color:var(--border-accent)}
         .model-indicator{width:10px;height:10px;border-radius:50%;box-shadow:0 0 12px currentColor}
         .model-name{font-weight:600;font-size:14px}
-        .status-badge{display:flex;align-items:center;gap:6px;font-size:12px;padding:6px 12px;border-radius:20px}
-        .status-badge.online{background:rgba(34,197,94,.1);color:var(--accent-success)}
-        .status-badge.offline{background:rgba(239,68,68,.1);color:var(--grok-color)}
-        .status-dot{width:8px;height:8px;border-radius:50%;background:currentColor;animation:pulse 2s infinite}
-        @keyframes pulse{50%{opacity:.5}}
-        .user-avatar{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--accent-primary),var(--gemini-color));display:flex;align-items:center;justify-content:center;font-weight:600;font-size:14px}
-        .chat-area{flex:1;display:flex;flex-direction:column;overflow:hidden}
+        .model-chevron{color:var(--text-muted);font-size:12px}
+        .voice-btn{width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,var(--accent-primary),var(--accent-secondary));border:none;color:white;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:transform .2s}
+        .voice-btn:hover{transform:scale(1.05)}
+        .user-avatar{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--accent-primary),var(--gemini-color));display:flex;align-items:center;justify-content:center;font-weight:600;font-size:14px;cursor:pointer}
+        .sidebar{background:var(--primary-800);border-right:1px solid var(--border-subtle);padding:16px;overflow-y:auto;display:flex;flex-direction:column;gap:24px}
+        .sidebar-section{display:flex;flex-direction:column;gap:8px}
+        .sidebar-title{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);padding:0 12px}
+        .new-chat-btn{display:flex;align-items:center;gap:10px;padding:12px 16px;background:linear-gradient(135deg,var(--accent-primary),var(--accent-secondary));border:none;border-radius:10px;color:white;font-weight:600;font-size:14px;cursor:pointer;transition:transform .2s,box-shadow .2s}
+        .new-chat-btn:hover{transform:translateY(-1px);box-shadow:0 4px 20px rgba(79,140,255,.3)}
+        .chat-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;cursor:pointer;transition:background .2s}
+        .chat-item:hover{background:var(--primary-700)}
+        .chat-item.active{background:var(--primary-700);border-left:2px solid var(--accent-primary)}
+        .chat-icon{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+        .chat-title{font-size:13px;color:var(--text-secondary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+        .chat-item.active .chat-title{color:var(--text-primary)}
+        .space-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;cursor:pointer;transition:background .2s}
+        .space-item:hover{background:var(--primary-700)}
+        .space-icon{font-size:16px}
+        .space-name{font-size:13px;color:var(--text-secondary)}
+        .model-list-item{display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:8px;cursor:pointer;transition:background .2s}
+        .model-list-item:hover{background:var(--primary-700)}
+        .model-list-item .model-indicator{width:8px;height:8px}
+        .model-list-name{font-size:13px;color:var(--text-secondary)}
+        .chat-area{display:flex;flex-direction:column;background:var(--primary-900);position:relative;overflow:hidden}
         .chat-messages{flex:1;overflow-y:auto;padding:24px;display:flex;flex-direction:column;gap:24px}
-        .message{display:flex;gap:16px;max-width:900px;margin:0 auto;width:100%}
+        .message{display:flex;gap:16px;max-width:100%}
         .message-avatar{width:36px;height:36px;border-radius:10px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:14px}
         .message.user .message-avatar{background:linear-gradient(135deg,var(--accent-primary),var(--gemini-color))}
         .message.ai .message-avatar{background:var(--primary-700);border:1px solid var(--border-subtle)}
-        .message-content{flex:1;display:flex;flex-direction:column;gap:8px;min-width:0}
+        .message-content{flex:1;display:flex;flex-direction:column;gap:8px}
         .message-header{display:flex;align-items:center;gap:8px}
         .message-author{font-weight:600;font-size:14px}
         .message-model{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text-muted)}
         .message-model .model-indicator{width:6px;height:6px}
         .message-time{font-size:12px;color:var(--text-muted);margin-left:auto}
-        .message-text{font-size:15px;line-height:1.7;color:var(--text-secondary);word-wrap:break-word}
+        .message-text{font-size:15px;line-height:1.7;color:var(--text-secondary)}
         .message.ai .message-text{background:var(--primary-800);padding:16px 20px;border-radius:12px;border:1px solid var(--border-subtle)}
         .message-actions{display:flex;align-items:center;gap:8px;margin-top:8px}
         .action-btn{display:flex;align-items:center;gap:6px;padding:6px 12px;background:transparent;border:1px solid var(--border-subtle);border-radius:6px;color:var(--text-muted);font-size:12px;cursor:pointer;transition:all .2s}
-        .action-btn:hover{background:var(--primary-700);color:var(--text-secondary)}
-        .context-panel{background:linear-gradient(135deg,rgba(79,140,255,.1),rgba(168,85,247,.1));border:1px solid var(--border-accent);border-radius:12px;padding:16px;max-width:900px;margin:0 auto;width:100%}
+        .action-btn:hover{background:var(--primary-700);color:var(--text-secondary);border-color:var(--border-accent)}
+        .compare-badge{background:linear-gradient(135deg,rgba(79,140,255,.1),rgba(168,85,247,.1));border-color:var(--border-accent);color:var(--accent-primary)}
+        .context-panel{background:linear-gradient(135deg,rgba(79,140,255,.1),rgba(168,85,247,.1));border:1px solid var(--border-accent);border-radius:12px;padding:16px;margin-bottom:20px}
         .context-header{display:flex;align-items:center;gap:10px;margin-bottom:12px}
         .context-icon{font-size:18px}
         .context-title{font-size:14px;font-weight:600;color:var(--accent-primary)}
         .context-items{display:flex;flex-direction:column;gap:8px}
         .context-item{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text-secondary)}
-        .input-area{padding:20px 24px;border-top:1px solid var(--border-subtle);background:var(--primary-800);flex-shrink:0}
-        .input-container{max-width:900px;margin:0 auto}
+        .context-item::before{content:'├─';color:var(--text-muted);font-family:monospace}
+        .context-item:last-child::before{content:'└─'}
+        .context-manage{display:flex;justify-content:flex-end;margin-top:12px}
+        .context-manage a{font-size:12px;color:var(--accent-primary);text-decoration:none;cursor:pointer}
+        .input-area{padding:20px 24px;border-top:1px solid var(--border-subtle);background:var(--primary-800)}
+        .input-container{display:flex;flex-direction:column;gap:12px}
         .input-wrapper{display:flex;align-items:flex-end;gap:12px;background:var(--primary-900);border:1px solid var(--border-subtle);border-radius:16px;padding:12px 16px;transition:border-color .2s}
         .input-wrapper:focus-within{border-color:var(--accent-primary)}
         .input-field{flex:1;background:transparent;border:none;color:var(--text-primary);font-size:15px;font-family:'Inter',sans-serif;resize:none;min-height:24px;max-height:120px;outline:none}
         .input-field::placeholder{color:var(--text-muted)}
         .input-actions{display:flex;align-items:center;gap:8px}
+        .input-action-btn{width:36px;height:36px;border-radius:10px;background:transparent;border:none;color:var(--text-muted);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s}
+        .input-action-btn:hover{background:var(--primary-700);color:var(--text-secondary)}
         .send-btn{width:40px;height:40px;border-radius:12px;background:linear-gradient(135deg,var(--accent-primary),var(--accent-secondary));border:none;color:white;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:transform .2s;font-size:16px}
         .send-btn:hover{transform:scale(1.05)}
         .send-btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
+        .input-options{display:flex;align-items:center;gap:16px}
+        .option-select{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text-muted)}
+        .option-select select{background:var(--primary-700);border:1px solid var(--border-subtle);border-radius:6px;padding:6px 12px;color:var(--text-secondary);font-size:13px;cursor:pointer;outline:none}
+        .artifact-panel{background:var(--primary-800);border-left:1px solid var(--border-subtle);display:flex;flex-direction:column}
+        .artifact-header{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--border-subtle)}
+        .artifact-title{font-family:'Plus Jakarta Sans',sans-serif;font-weight:600;font-size:15px}
+        .artifact-tabs{display:flex;gap:4px}
+        .artifact-tab{padding:6px 12px;background:transparent;border:none;color:var(--text-muted);font-size:13px;border-radius:6px;cursor:pointer;transition:all .2s}
+        .artifact-tab:hover{background:var(--primary-700)}
+        .artifact-tab.active{background:var(--primary-700);color:var(--accent-primary)}
+        .artifact-content{flex:1;overflow-y:auto;padding:20px}
+        .stats-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:16px}
+        .stat-card{background:var(--primary-900);border:1px solid var(--border-subtle);border-radius:10px;padding:14px}
+        .stat-value{font-size:1.5rem;font-weight:700;color:var(--accent-primary)}
+        .stat-label{font-size:12px;color:var(--text-muted);margin-top:4px}
+        .artifact-footer{padding:16px 20px;border-top:1px solid var(--border-subtle);display:flex;align-items:center;justify-content:space-between}
         .typing-indicator{display:flex;align-items:center;gap:8px;padding:12px 16px;background:var(--primary-800);border-radius:12px;width:fit-content}
         .typing-dots{display:flex;gap:4px}
         .typing-dot{width:8px;height:8px;border-radius:50%;background:var(--claude-color);animation:typing 1.4s infinite}
@@ -92,20 +140,95 @@
         <header class="header">
             <div class="logo">
                 <div class="logo-icon">AI</div>
-                <span class="logo-text">ABBI Chatbot</span>
+                <span class="logo-text">ABBI-AI.com</span>
             </div>
+            <nav class="header-nav">
+                <button class="nav-btn active">Chat</button>
+                <button class="nav-btn">Research</button>
+                <button class="nav-btn">Spaces</button>
+                <button class="nav-btn">Hive Mind</button>
+            </nav>
             <div class="header-actions">
                 <div class="model-selector" id="modelSelector">
                     <div class="model-indicator" id="modelDot" style="background:var(--claude-color)"></div>
-                    <span class="model-name" id="modelLabel">Claude Sonnet 4</span>
+                    <span class="model-name" id="modelLabel">Claude Opus 4.5</span>
+                    <span class="model-chevron">▾</span>
                 </div>
-                <div class="status-badge online" id="statusBadge">
-                    <span class="status-dot"></span>
-                    <span id="statusText">Connected</span>
-                </div>
+                <button class="voice-btn" title="Voice Mode">🎙️</button>
                 <div class="user-avatar">YG</div>
             </div>
         </header>
+        
+        <aside class="sidebar">
+            <button class="new-chat-btn" onclick="newChat()">
+                <span>✨</span>
+                <span>New Chat</span>
+            </button>
+            
+            <div class="sidebar-section">
+                <div class="sidebar-title">Recent Chats</div>
+                <div class="chat-item active">
+                    <div class="chat-icon" style="background:var(--claude-color)"></div>
+                    <span class="chat-title">MCP Gateway Architecture</span>
+                </div>
+                <div class="chat-item">
+                    <div class="chat-icon" style="background:var(--gpt-color)"></div>
+                    <span class="chat-title">Fund III Pitch Deck</span>
+                </div>
+                <div class="chat-item">
+                    <div class="chat-icon" style="background:var(--gemini-color)"></div>
+                    <span class="chat-title">Shiloh Analysis</span>
+                </div>
+                <div class="chat-item">
+                    <div class="chat-icon" style="background:var(--perplexity-color)"></div>
+                    <span class="chat-title">Bloodstock Research</span>
+                </div>
+            </div>
+            
+            <div class="sidebar-section">
+                <div class="sidebar-title">Spaces</div>
+                <div class="space-item">
+                    <span class="space-icon">🧠</span>
+                    <span class="space-name">Sovereign Mind</span>
+                </div>
+                <div class="space-item">
+                    <span class="space-icon">💼</span>
+                    <span class="space-name">MiddleGround Capital</span>
+                </div>
+                <div class="space-item">
+                    <span class="space-icon">🏇</span>
+                    <span class="space-name">Resolute Holdings</span>
+                </div>
+            </div>
+            
+            <div class="sidebar-section">
+                <div class="sidebar-title">Available Models</div>
+                <div class="model-list-item" onclick="selectModel('claude')">
+                    <div class="model-indicator" style="background:var(--claude-color);box-shadow:0 0 8px var(--claude-color)"></div>
+                    <span class="model-list-name">Claude Opus 4.5 ⭐</span>
+                </div>
+                <div class="model-list-item" onclick="selectModel('gemini')">
+                    <div class="model-indicator" style="background:var(--gemini-color);box-shadow:0 0 8px var(--gemini-color)"></div>
+                    <span class="model-list-name">Gemini 2.0 Flash</span>
+                </div>
+                <div class="model-list-item" onclick="selectModel('grok')">
+                    <div class="model-indicator" style="background:var(--grok-color);box-shadow:0 0 8px var(--grok-color)"></div>
+                    <span class="model-list-name">Grok 2</span>
+                </div>
+                <div class="model-list-item" onclick="selectModel('gpt')">
+                    <div class="model-indicator" style="background:var(--gpt-color);box-shadow:0 0 8px var(--gpt-color)"></div>
+                    <span class="model-list-name">GPT-4o</span>
+                </div>
+                <div class="model-list-item" onclick="selectModel('perplexity')">
+                    <div class="model-indicator" style="background:var(--perplexity-color);box-shadow:0 0 8px var(--perplexity-color)"></div>
+                    <span class="model-list-name">Perplexity</span>
+                </div>
+                <div class="model-list-item" onclick="selectModel('deepseek')">
+                    <div class="model-indicator" style="background:var(--deepseek-color);box-shadow:0 0 8px var(--deepseek-color)"></div>
+                    <span class="model-list-name">DeepSeek R1</span>
+                </div>
+            </div>
+        </aside>
         
         <main class="chat-area">
             <div class="chat-messages" id="messages">
@@ -115,9 +238,12 @@
                         <span class="context-title">Hive Mind Context Active</span>
                     </div>
                     <div class="context-items">
-                        <div class="context-item">MCP Gateway: <span id="toolCount">Loading...</span> tools</div>
+                        <div class="context-item">MCP Gateway: <span id="toolCount">Loading...</span> tools available</div>
+                        <div class="context-item">Connected Backends: <span id="backendCount">--</span></div>
                         <div class="context-item">Session: <span id="sessionId">--</span></div>
-                        <div class="context-item">Model: <span id="contextModel">Claude Sonnet 4</span></div>
+                    </div>
+                    <div class="context-manage">
+                        <a onclick="refreshGateway()">Manage Context →</a>
                     </div>
                 </div>
             </div>
@@ -127,12 +253,70 @@
                     <div class="input-wrapper">
                         <textarea class="input-field" id="inputField" placeholder="Message ABBI..." rows="1" onkeydown="handleKey(event)"></textarea>
                         <div class="input-actions">
+                            <button class="input-action-btn" title="Attach files">📎</button>
+                            <button class="input-action-btn" title="Voice input">🎤</button>
                             <button class="send-btn" id="sendBtn" onclick="sendMessage()" title="Send">➤</button>
+                        </div>
+                    </div>
+                    <div class="input-options">
+                        <div class="option-select">
+                            <span>Focus:</span>
+                            <select id="focusSelect">
+                                <option value="all">All</option>
+                                <option value="code">Code</option>
+                                <option value="research">Research</option>
+                                <option value="creative">Creative</option>
+                            </select>
+                        </div>
+                        <div class="option-select">
+                            <span>Tone:</span>
+                            <select id="toneSelect">
+                                <option value="professional">Professional</option>
+                                <option value="casual">Casual</option>
+                                <option value="concise">Concise</option>
+                                <option value="detailed">Detailed</option>
+                            </select>
                         </div>
                     </div>
                 </div>
             </div>
         </main>
+        
+        <aside class="artifact-panel">
+            <div class="artifact-header">
+                <span class="artifact-title">⚡ Gateway Status</span>
+                <div class="artifact-tabs">
+                    <button class="artifact-tab active">Status</button>
+                    <button class="artifact-tab">Tools</button>
+                </div>
+            </div>
+            <div class="artifact-content">
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-value" id="statTools">--</div>
+                        <div class="stat-label">MCP Tools</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="statBackends">--</div>
+                        <div class="stat-label">Backends</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">4,700+</div>
+                        <div class="stat-label">Hive Entries</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">6</div>
+                        <div class="stat-label">AI Models</div>
+                    </div>
+                </div>
+                <div class="sidebar-title" style="margin-bottom:12px">Connected Backends</div>
+                <div id="backendsList"></div>
+            </div>
+            <div class="artifact-footer">
+                <span style="font-size:12px;color:var(--text-muted)">Last updated: <span id="lastUpdate">--</span></span>
+                <button class="action-btn" onclick="refreshGateway()">🔄 Refresh</button>
+            </div>
+        </aside>
     </div>
 
 <script>
@@ -142,7 +326,12 @@ const CONFIG = {
 };
 
 const MODELS = {
-    claude: { name: 'Claude Sonnet 4', color: 'var(--claude-color)' }
+    claude: { name: 'Claude Opus 4.5', color: 'var(--claude-color)', api: 'claude' },
+    gemini: { name: 'Gemini 2.0 Flash', color: 'var(--gemini-color)', api: 'gemini' },
+    grok: { name: 'Grok 2', color: 'var(--grok-color)', api: 'grok' },
+    gpt: { name: 'GPT-4o', color: 'var(--gpt-color)', api: 'gpt' },
+    perplexity: { name: 'Perplexity', color: 'var(--perplexity-color)', api: 'perplexity' },
+    deepseek: { name: 'DeepSeek R1', color: 'var(--deepseek-color)', api: 'deepseek' }
 };
 
 let state = {
@@ -157,12 +346,27 @@ document.addEventListener('DOMContentLoaded', () => {
     state.sessionId = 'ABBI-' + Math.random().toString(36).substring(2, 10).toUpperCase();
     document.getElementById('sessionId').textContent = state.sessionId;
     
+    document.querySelectorAll('.nav-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+        });
+    });
+    
+    document.querySelectorAll('.artifact-tab').forEach(tab => {
+        tab.addEventListener('click', function() {
+            document.querySelectorAll('.artifact-tab').forEach(t => t.classList.remove('active'));
+            this.classList.add('active');
+        });
+    });
+    
     document.getElementById('inputField').addEventListener('input', function() {
         this.style.height = 'auto';
         this.style.height = Math.min(this.scrollHeight, 120) + 'px';
     });
     
     init();
+    setInterval(refreshGateway, 30000);
 });
 
 async function init() {
@@ -171,29 +375,53 @@ async function init() {
 }
 
 async function refreshGateway() {
-    const statusBadge = document.getElementById('statusBadge');
-    const statusText = document.getElementById('statusText');
-    
     try {
         const r = await fetch(CONFIG.gateway);
         const d = await r.json();
         state.gateway = d;
         
-        statusBadge.className = 'status-badge online';
-        statusText.textContent = d.total_tools + ' tools';
+        const healthy = Object.values(d.backends).filter(b => b.status === 'healthy').length;
+        const total = Object.keys(d.backends).length;
+        
+        document.getElementById('statTools').textContent = d.total_tools;
+        document.getElementById('statBackends').textContent = healthy + '/' + total;
         document.getElementById('toolCount').textContent = d.total_tools;
+        document.getElementById('backendCount').textContent = healthy + ' healthy';
+        document.getElementById('lastUpdate').textContent = new Date().toLocaleTimeString();
+        
+        const backendsList = document.getElementById('backendsList');
+        backendsList.innerHTML = Object.entries(d.backends).map(([name, info]) => `
+            <div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--primary-900);border-radius:8px;margin-bottom:8px">
+                <div style="width:8px;height:8px;border-radius:50%;background:${info.status === 'healthy' ? 'var(--accent-success)' : 'var(--grok-color)'};box-shadow:0 0 8px ${info.status === 'healthy' ? 'var(--accent-success)' : 'var(--grok-color)'}"></div>
+                <span style="flex:1;font-size:13px;color:var(--text-secondary)">${name.charAt(0).toUpperCase() + name.slice(1)}</span>
+                <span style="font-size:11px;color:var(--accent-primary)">${info.tools}</span>
+            </div>
+        `).join('');
     } catch (e) {
-        statusBadge.className = 'status-badge offline';
-        statusText.textContent = 'Offline';
+        console.log('Gateway error:', e);
         document.getElementById('toolCount').textContent = '200+';
     }
+}
+
+function selectModel(modelId) {
+    state.model = modelId;
+    const model = MODELS[modelId];
+    document.getElementById('modelDot').style.background = model.color;
+    document.getElementById('modelLabel').textContent = model.name;
 }
 
 function addWelcomeMessage() {
     const toolCount = state.gateway?.total_tools || '200+';
     addMessage('ai', `Welcome back, Your Grace. I'm ABBI, your Adaptive Second Brain Intelligence.
 
-I have access to ${toolCount} tools via the MCP Gateway, including Asana, Google Drive, Make.com, Snowflake, Microsoft 365, and many more.
+I have access to <strong>${toolCount} tools</strong> via the MCP Gateway, including:
+
+• <strong>Asana</strong> - Task and project management
+• <strong>Make.com</strong> - Workflow automation  
+• <strong>Snowflake</strong> - Data warehouse queries
+• <strong>Microsoft 365</strong> - Email and calendar
+• <strong>Google Drive</strong> - Document access
+• And many more...
 
 How may I assist you today?`, []);
 }
@@ -203,7 +431,7 @@ function addMessage(type, text, toolCalls = []) {
     const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     const model = MODELS[state.model];
     
-    const formattedText = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>');
+    const formattedText = text.replace(/\n/g, '<br>');
     
     const msgHtml = `
         <div class="message ${type}">
@@ -223,6 +451,10 @@ function addMessage(type, text, toolCalls = []) {
                 ${type === 'ai' ? `
                     <div class="message-actions">
                         <button class="action-btn" onclick="copyMessage(this)">📋 Copy</button>
+                        <button class="action-btn">🔄 Regenerate</button>
+                        <button class="action-btn">✏️ Edit</button>
+                        <button class="action-btn">📤 Share</button>
+                        <button class="action-btn compare-badge">⚡ Compare Models</button>
                     </div>
                 ` : ''}
             </div>
@@ -287,29 +519,44 @@ async function sendMessage() {
     const typingId = addTypingIndicator();
     
     try {
-        const result = await callClaudeAPI(text);
+        let result;
+        
+        if (state.model === 'claude') {
+            result = await callClaudeAPI(text);
+        } else {
+            result = await callGatewayAI(text);
+        }
+        
         removeTypingIndicator(typingId);
         addMessage('ai', result.text, result.toolCalls || []);
     } catch (e) {
         removeTypingIndicator(typingId);
-        addMessage('ai', `I encountered an issue: ${e.message}\n\nPlease try again.`, []);
+        addMessage('ai', `I encountered an issue: ${e.message}
+
+Please try again or select a different model.`, []);
     }
     
     sendBtn.disabled = false;
 }
 
 async function callClaudeAPI(message) {
+    const focus = document.getElementById('focusSelect').value;
+    const tone = document.getElementById('toneSelect').value;
+    
     const systemPrompt = `You are ABBI (Adaptive Second Brain Intelligence), a sophisticated AI assistant for Your Grace.
 
 You have access to the MCP Gateway with ${state.gateway?.total_tools || 200}+ tools including:
 - Asana: Task management
-- Google Drive: Document access
 - Make.com: Workflow automation
 - Snowflake: Data queries
 - Microsoft 365: Email and calendar
+- Google Drive: Document access
 
 Current session: ${state.sessionId}
-Be helpful, concise, and address the user as "Your Grace" when appropriate.`;
+Focus mode: ${focus}
+Tone: ${tone}
+
+Be helpful, ${tone}, and address the user as "Your Grace" when appropriate.`;
 
     const messages = state.conversationHistory.slice(-10);
     
@@ -344,6 +591,71 @@ Be helpful, concise, and address the user as "Your Grace" when appropriate.`;
     }
     
     return { text: text || 'I processed your request.', toolCalls };
+}
+
+async function callGatewayAI(message) {
+    const toolName = {
+        gemini: 'gemini_generate_content',
+        grok: 'grok_chat',
+        gpt: 'chatgpt_chat',
+        perplexity: 'perplexity_chat',
+        deepseek: 'deepseek_chat'
+    }[state.model];
+    
+    try {
+        const response = await fetch(CONFIG.gateway, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                jsonrpc: '2.0',
+                method: 'tools/call',
+                params: {
+                    name: toolName,
+                    arguments: { prompt: message, messages: [{ role: 'user', content: message }] }
+                },
+                id: Date.now()
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.result?.content) {
+            const textContent = data.result.content.find(c => c.type === 'text');
+            return { text: textContent?.text || 'Response received.', toolCalls: [] };
+        }
+        
+        return { text: 'I processed your request via ' + MODELS[state.model].name + '.', toolCalls: [] };
+    } catch (e) {
+        throw new Error('Failed to call ' + MODELS[state.model].name);
+    }
+}
+
+function newChat() {
+    state.messages = [];
+    state.conversationHistory = [];
+    state.sessionId = 'ABBI-' + Math.random().toString(36).substring(2, 10).toUpperCase();
+    document.getElementById('sessionId').textContent = state.sessionId;
+    
+    const messages = document.getElementById('messages');
+    messages.innerHTML = `
+        <div class="context-panel">
+            <div class="context-header">
+                <span class="context-icon">🧠</span>
+                <span class="context-title">Hive Mind Context Active</span>
+            </div>
+            <div class="context-items">
+                <div class="context-item">MCP Gateway: <span id="toolCount">${state.gateway?.total_tools || '--'}</span> tools available</div>
+                <div class="context-item">Connected Backends: <span id="backendCount">--</span></div>
+                <div class="context-item">Session: <span id="sessionId">${state.sessionId}</span></div>
+            </div>
+            <div class="context-manage">
+                <a onclick="refreshGateway()">Manage Context →</a>
+            </div>
+        </div>
+    `;
+    
+    refreshGateway();
+    addWelcomeMessage();
 }
 
 function copyMessage(btn) {
