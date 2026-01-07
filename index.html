@@ -208,7 +208,51 @@ function selectModel(m){state.model=m;document.getElementById('modelDot').style.
 function addWelcome(){addMessage('ai','Welcome back, Your Grace. I\'m ABBI.\n\nI have access to <strong>200+ tools</strong> via the MCP Gateway.\n\nHow may I assist you today?')}
 function addMessage(type,text){const msgs=document.getElementById('messages');const time=new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});const m=MODELS[state.model];msgs.insertAdjacentHTML('beforeend','<div class="message '+type+'"><div class="message-avatar">'+(type==='user'?'YG':'🤖')+'</div><div class="message-content"><div class="message-header"><span class="message-author">'+(type==='user'?'Your Grace':'ABBI')+'</span>'+(type==='ai'?'<div class="message-model"><div class="model-indicator" style="background:'+m.color+'"></div><span>'+m.name+'</span></div>':'')+'<span class="message-time">'+time+'</span></div><div class="message-text">'+text.replace(/\n/g,'<br>')+'</div>'+(type==='ai'?'<div class="message-actions"><button class="action-btn" onclick="copyMsg(this)">📋 Copy</button><button class="action-btn compare-badge">⚡ Compare</button></div>':'')+'</div></div>');msgs.scrollTop=msgs.scrollHeight;state.history.push({role:type==='user'?'user':'assistant',content:text})}
 function handleKey(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMessage()}}
-async function sendMessage(){const input=document.getElementById('inputField');const text=input.value.trim();if(!text)return;addMessage('user',text);input.value='';input.style.height='auto';document.getElementById('sendBtn').disabled=true;const msgs=document.getElementById('messages');const typingId='t-'+Date.now();msgs.insertAdjacentHTML('beforeend','<div class="message ai" id="'+typingId+'"><div class="message-avatar">🤖</div><div class="typing-indicator"><div class="typing-dots"><div class="typing-dot" style="background:'+MODELS[state.model].color+'"></div><div class="typing-dot" style="background:'+MODELS[state.model].color+'"></div><div class="typing-dot" style="background:'+MODELS[state.model].color+'"></div></div></div></div>');msgs.scrollTop=msgs.scrollHeight;try{const r=await fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:4096,system:'You are ABBI. Address user as "Your Grace".',messages:state.history.slice(-10)})});const d=await r.json();document.getElementById(typingId)?.remove();addMessage('ai',d.content?.[0]?.text||'I processed your request.')}catch(e){document.getElementById(typingId)?.remove();addMessage('ai','Error: '+e.message)}document.getElementById('sendBtn').disabled=false}
+async function sendMessage(){
+    const input=document.getElementById('inputField');
+    const text=input.value.trim();
+    if(!text)return;
+    addMessage('user',text);
+    input.value='';
+    input.style.height='auto';
+    document.getElementById('sendBtn').disabled=true;
+    const msgs=document.getElementById('messages');
+    const typingId='t-'+Date.now();
+    msgs.insertAdjacentHTML('beforeend','<div class="message ai" id="'+typingId+'"><div class="message-avatar">🤖</div><div class="typing-indicator"><div class="typing-dots"><div class="typing-dot" style="background:'+MODELS[state.model].color+'"></div><div class="typing-dot" style="background:'+MODELS[state.model].color+'"></div><div class="typing-dot" style="background:'+MODELS[state.model].color+'"></div></div></div></div>');
+    msgs.scrollTop=msgs.scrollHeight;
+    try{
+        const r=await fetch('/api/chat',{
+            method:'POST',
+            headers:{'Content-Type':'application/json'},
+            body:JSON.stringify({
+                model:'claude-sonnet-4-20250514',
+                max_tokens:4096,
+                messages:state.history.slice(-10)
+            })
+        });
+        const d=await r.json();
+        console.log('API Response:', JSON.stringify(d, null, 2));
+        document.getElementById(typingId)?.remove();
+        
+        // Handle different response structures
+        let responseText = '';
+        if (d.content && Array.isArray(d.content) && d.content[0]?.text) {
+            responseText = d.content[0].text;
+        } else if (d.error) {
+            responseText = 'API Error: ' + (d.error.message || JSON.stringify(d.error));
+        } else if (d.type === 'error') {
+            responseText = 'Error: ' + (d.message || JSON.stringify(d));
+        } else {
+            responseText = 'Response: ' + JSON.stringify(d).substring(0, 500);
+        }
+        addMessage('ai', responseText);
+    }catch(e){
+        console.error('Fetch error:', e);
+        document.getElementById(typingId)?.remove();
+        addMessage('ai','Network Error: '+e.message);
+    }
+    document.getElementById('sendBtn').disabled=false;
+}
 function newChat(){state.history=[];state.sessionId='ABBI-'+Math.random().toString(36).substr(2,8).toUpperCase();document.getElementById('sessionId').textContent=state.sessionId;document.getElementById('messages').innerHTML='<div class="context-panel"><div class="context-header"><span class="context-icon">🧠</span><span class="context-title">Hive Mind Active</span></div><div class="context-items"><div class="context-item">MCP Gateway: <span id="toolCount">200+</span> tools</div><div class="context-item">Session: <span id="sessionId">'+state.sessionId+'</span></div></div></div>';addWelcome()}
 function copyMsg(b){navigator.clipboard.writeText(b.closest('.message-content').querySelector('.message-text').innerText);b.innerHTML='✓ Copied';setTimeout(()=>b.innerHTML='📋 Copy',2000)}
 </script>
