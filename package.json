@@ -1,7 +1,8 @@
 {
   "name": "abby-aichatbot",
-  "version": "4.1.1",
+  "version": "4.2.0",
   "private": true,
+  "description": "ABBI-AI.com - Adaptive Second Brain Intelligence with mobile-responsive design",
   "scripts": {
     "dev": "vercel dev",
     "build": "echo 'Static site - no build needed'",
@@ -9,5 +10,6 @@
   },
   "dependencies": {
     "snowflake-sdk": "^1.14.0"
-  }
+  },
+  "keywords": ["abbi", "ai", "chatbot", "mcp", "sovereign-mind"]
 }
