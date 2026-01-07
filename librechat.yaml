@@ -1,0 +1,77 @@
+version: 1.1.7
+cache: true
+
+interface:
+  customName: "ABBI HiveMind"
+  
+registration:
+  socialLogins: []
+
+endpoints:
+  custom:
+    # Claude via Anthropic
+    - name: "Claude"
+      apiKey: "${ANTHROPIC_API_KEY}"
+      baseURL: "https://api.anthropic.com/v1"
+      models:
+        default: ["claude-sonnet-4-20250514", "claude-opus-4-20250514", "claude-3-5-haiku-20241022"]
+        fetch: false
+      titleConvo: true
+      titleModel: "claude-sonnet-4-20250514"
+      modelDisplayLabel: "Claude"
+      iconURL: "https://www.anthropic.com/favicon.ico"
+
+    # GPT-4o via OpenAI
+    - name: "GPT"
+      apiKey: "${OPENAI_API_KEY}"
+      baseURL: "https://api.openai.com/v1"
+      models:
+        default: ["gpt-4o", "gpt-4o-mini", "gpt-4-turbo", "o1-preview", "o1-mini"]
+        fetch: true
+      titleConvo: true
+      titleModel: "gpt-4o-mini"
+      modelDisplayLabel: "GPT"
+
+    # Gemini via Google
+    - name: "Gemini"
+      apiKey: "${GOOGLE_KEY}"
+      baseURL: "https://generativelanguage.googleapis.com/v1beta/openai"
+      models:
+        default: ["gemini-2.0-flash-exp", "gemini-1.5-pro", "gemini-1.5-flash"]
+        fetch: false
+      titleConvo: true
+      titleModel: "gemini-2.0-flash-exp"
+      modelDisplayLabel: "Gemini"
+
+    # Grok via xAI
+    - name: "Grok"
+      apiKey: "${XAI_API_KEY}"
+      baseURL: "https://api.x.ai/v1"
+      models:
+        default: ["grok-2-latest", "grok-2-vision-1212", "grok-beta"]
+        fetch: false
+      titleConvo: true
+      titleModel: "grok-2-latest"
+      modelDisplayLabel: "Grok"
+
+    # DeepSeek
+    - name: "DeepSeek"
+      apiKey: "${DEEPSEEK_API_KEY}"
+      baseURL: "https://api.deepseek.com/v1"
+      models:
+        default: ["deepseek-chat", "deepseek-reasoner"]
+        fetch: false
+      titleConvo: true
+      titleModel: "deepseek-chat"
+      modelDisplayLabel: "DeepSeek"
+
+    # Ollama via Tailscale
+    - name: "Ollama"
+      apiKey: "ollama"
+      baseURL: "${OLLAMA_BASE_URL}/v1"
+      models:
+        default: ["llama3.2:latest", "mistral:latest", "codellama:latest", "phi3:latest"]
+        fetch: true
+      titleConvo: true
+      titleModel: "llama3.2:latest"
+      modelDisplayLabel: "Ollama (Local)"
