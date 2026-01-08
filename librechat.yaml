@@ -57,28 +57,6 @@ endpoints:
       titleModel: "gemini-2.0-flash-exp"
       modelDisplayLabel: "Gemini"
 
-    # Vertex AI (Google Cloud)
-    - name: "Vertex"
-      apiKey: "${VERTEX_API_KEY}"
-      baseURL: "https://${VERTEX_REGION}-aiplatform.googleapis.com/v1/projects/${VERTEX_PROJECT_ID}/locations/${VERTEX_REGION}/publishers/google/models"
-      models:
-        default: ["gemini-1.5-pro", "gemini-1.5-flash"]
-        fetch: false
-      titleConvo: true
-      titleModel: "gemini-1.5-pro"
-      modelDisplayLabel: "Vertex AI"
-
-    # AWS Bedrock
-    - name: "Bedrock"
-      apiKey: "${AWS_ACCESS_KEY_ID}:${AWS_SECRET_ACCESS_KEY}"
-      baseURL: "https://bedrock-runtime.${AWS_REGION}.amazonaws.com"
-      models:
-        default: ["anthropic.claude-3-5-sonnet-20241022-v2:0", "anthropic.claude-3-haiku-20240307-v1:0", "amazon.titan-text-express-v1", "meta.llama3-70b-instruct-v1:0"]
-        fetch: false
-      titleConvo: true
-      titleModel: "anthropic.claude-3-5-sonnet-20241022-v2:0"
-      modelDisplayLabel: "AWS Bedrock"
-
     # Azure OpenAI / Copilot
     - name: "Copilot"
       apiKey: "${AZURE_OPENAI_API_KEY}"
@@ -102,6 +80,10 @@ endpoints:
       titleConvo: true
       titleModel: "grok-2-latest"
       modelDisplayLabel: "Grok"
+
+# NOTE: DeepSeek integration PAUSED for security concerns (2026-01-08)
+# NOTE: AWS Bedrock removed - requires custom authentication handler
+# NOTE: Vertex AI removed - requires Google Cloud service account
 
 # MCP Servers for Tool Integration
 mcpServers:
