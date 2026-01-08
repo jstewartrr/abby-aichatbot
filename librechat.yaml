@@ -116,9 +116,3 @@ fileConfig:
     default:
       fileLimit: 5
       fileSizeLimit: 50
-
-# Feature Flags
-features:
-  plugins: true
-  codeArtifacts: true
-  agents: true
