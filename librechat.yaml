@@ -21,9 +21,19 @@ rateLimits:
     userMax: 50
     userWindowInMinutes: 60
 
+# Pre-configured Endpoints
 endpoints:
+  # AWS Bedrock - Claude, Llama, Mistral via AWS
+  bedrock:
+    titleModel: "anthropic.claude-3-haiku-20240307-v1:0"
+    streamRate: 35
+    availableRegions:
+      - "us-east-1"
+      - "us-west-2"
+
+  # Custom Endpoints
   custom:
-    # Claude via Anthropic
+    # Claude via Anthropic Direct
     - name: "Claude"
       apiKey: "${ANTHROPIC_API_KEY}"
       baseURL: "https://api.anthropic.com/v1"
@@ -82,8 +92,7 @@ endpoints:
       modelDisplayLabel: "Grok"
 
 # NOTE: DeepSeek integration PAUSED for security concerns (2026-01-08)
-# NOTE: AWS Bedrock removed - requires custom authentication handler
-# NOTE: Vertex AI removed - requires Google Cloud service account
+# NOTE: Vertex AI pending - requires Google Cloud service account JSON file
 
 # MCP Servers for Tool Integration
 mcpServers:
