@@ -1,7 +1,10 @@
 FROM ghcr.io/danny-avila/librechat-dev:latest
 
-# Copy custom config
-COPY librechat.yaml /app/librechat.yaml
+# Download the config file from GitHub (using ADD with URL)
+ADD https://raw.githubusercontent.com/jstewartrr/abby-aichatbot/main/librechat.yaml /app/librechat.yaml
+
+# Ensure the file has correct permissions
+RUN chmod 644 /app/librechat.yaml
 
 # Expose port
 EXPOSE 3080
