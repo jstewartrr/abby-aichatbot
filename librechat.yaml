@@ -23,47 +23,44 @@ rateLimits:
 
 # Pre-configured Endpoints
 endpoints:
-  # AWS Bedrock - Curated model list (latest versions only)
+  # AWS Bedrock - Curated model list
   bedrock:
     titleModel: "anthropic.claude-3-haiku-20240307-v1:0"
     streamRate: 35
     availableRegions:
       - "us-east-1"
-    # Curated models - latest versions only, no legacy
     models:
       default:
-        # Claude 4.5 family (latest)
         - "anthropic.claude-sonnet-4-5-20250929-v1:0"
         - "anthropic.claude-haiku-4-5-20251001-v1:0"
-        # Claude 4 Opus (most capable)
         - "anthropic.claude-opus-4-1-20250805-v1:0"
-        # Claude 3.5 (stable fallback)
         - "anthropic.claude-3-5-sonnet-20241022-v2:0"
         - "anthropic.claude-3-haiku-20240307-v1:0"
-        # Meta Llama 3.1 (latest, not Llama 2)
         - "meta.llama3-1-70b-instruct-v1:0"
         - "meta.llama3-1-8b-instruct-v1:0"
-        # Amazon Titan (AWS flagship)
         - "amazon.titan-text-premier-v1:0"
-        # Mistral Large
         - "mistral.mistral-large-2407-v1:0"
       fetch: false
 
+  # Azure OpenAI - Built-in endpoint
+  azureOpenAI:
+    titleModel: "gpt-4o"
+    plugins: true
+    groups:
+      - group: "sovereign-mind-openai"
+        apiKey: "${AZURE_OPENAI_API_KEY}"
+        instanceName: "sovereign-mind-openai"
+        deploymentName: "gpt-4o"
+        version: "2024-02-15-preview"
+        baseURL: "https://sovereign-mind-openai.openai.azure.com/openai/deployments/gpt-4o"
+        models:
+          gpt-4o:
+            deploymentName: "gpt-4o"
+
   # Custom Endpoints
   custom:
-    # Claude via Anthropic Direct
-    - name: "Claude"
-      apiKey: "${ANTHROPIC_API_KEY}"
-      baseURL: "https://api.anthropic.com/v1"
-      models:
-        default: ["claude-sonnet-4-20250514", "claude-opus-4-20250514", "claude-3-5-haiku-20241022"]
-        fetch: false
-      titleConvo: true
-      titleModel: "claude-sonnet-4-20250514"
-      modelDisplayLabel: "Claude"
-
-    # GPT-4o via OpenAI
-    - name: "GPT"
+    # 1. OpenAI Direct API
+    - name: "OpenAI"
       apiKey: "${OPENAI_API_KEY}"
       baseURL: "https://api.openai.com/v1"
       models:
@@ -71,33 +68,20 @@ endpoints:
         fetch: false
       titleConvo: true
       titleModel: "gpt-4o-mini"
-      modelDisplayLabel: "GPT"
+      modelDisplayLabel: "OpenAI"
 
-    # Gemini via Google AI Studio
-    - name: "Gemini"
-      apiKey: "${GOOGLE_KEY}"
-      baseURL: "https://generativelanguage.googleapis.com/v1beta/openai"
+    # 2. Claude via Anthropic Direct
+    - name: "Anthropic"
+      apiKey: "${ANTHROPIC_API_KEY}"
+      baseURL: "https://api.anthropic.com/v1"
       models:
-        default: ["gemini-2.0-flash-exp", "gemini-1.5-pro", "gemini-1.5-flash"]
+        default: ["claude-sonnet-4-20250514", "claude-opus-4-20250514", "claude-3-5-haiku-20241022"]
         fetch: false
       titleConvo: true
-      titleModel: "gemini-2.0-flash-exp"
-      modelDisplayLabel: "Gemini"
+      titleModel: "claude-sonnet-4-20250514"
+      modelDisplayLabel: "Anthropic"
 
-    # Azure OpenAI / Copilot
-    - name: "Copilot"
-      apiKey: "${AZURE_OPENAI_API_KEY}"
-      baseURL: "https://${AZURE_OPENAI_ENDPOINT}.openai.azure.com/openai/deployments/${AZURE_DEPLOYMENT_NAME}"
-      models:
-        default: ["gpt-4o", "gpt-4-turbo"]
-        fetch: false
-      headers:
-        api-version: "2024-02-15-preview"
-      titleConvo: true
-      titleModel: "gpt-4o"
-      modelDisplayLabel: "Azure/Copilot"
-
-    # Grok via xAI
+    # 3. Grok via xAI
     - name: "Grok"
       apiKey: "${XAI_API_KEY}"
       baseURL: "https://api.x.ai/v1"
@@ -108,7 +92,18 @@ endpoints:
       titleModel: "grok-2-latest"
       modelDisplayLabel: "Grok"
 
-# MCP Servers for Tool Integration (SSE Transport)
+    # 4. Gemini via Google AI Studio (disabled until valid key)
+    # - name: "Gemini"
+    #   apiKey: "${GOOGLE_KEY}"
+    #   baseURL: "https://generativelanguage.googleapis.com/v1beta/openai"
+    #   models:
+    #     default: ["gemini-2.0-flash-exp", "gemini-1.5-pro", "gemini-1.5-flash"]
+    #     fetch: false
+    #   titleConvo: true
+    #   titleModel: "gemini-2.0-flash-exp"
+    #   modelDisplayLabel: "Gemini"
+
+# MCP Servers for Tool Integration
 mcpServers:
   sovereign-mind:
     type: sse
