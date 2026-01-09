@@ -94,22 +94,21 @@ endpoints:
 # NOTE: DeepSeek integration PAUSED for security concerns (2026-01-08)
 # NOTE: Vertex AI pending - requires Google Cloud service account JSON file
 
-# MCP Servers for Tool Integration
+# MCP Servers for Tool Integration (SSE Transport)
 mcpServers:
-  # Sovereign Mind Gateway - 218+ tools
+  # Sovereign Mind Gateway via SSE - 218+ tools
   sovereign-mind:
-    url: "https://cv-sm-gateway-v3.lemoncoast-87756bcf.eastus.azurecontainerapps.io/mcp"
-    timeout: 30000
+    type: sse
+    url: "https://sm-mcp-gateway-sse.lemoncoast-87756bcf.eastus.azurecontainerapps.io/sse"
+    timeout: 60000
+    initTimeout: 30000
 
-  # Load Balanced MCP
+  # Load Balanced MCP via SSE
   hivemind-mcp:
-    url: "https://mcp.abbi-ai.com/mcp"
-    timeout: 30000
-
-  # Snowflake Direct
-  snowflake:
-    url: "https://cv-sm-snowflake-20260105.lemoncoast-87756bcf.eastus.azurecontainerapps.io/mcp"
-    timeout: 30000
+    type: sse
+    url: "https://sm-mcp-gateway-sse.lemoncoast-87756bcf.eastus.azurecontainerapps.io/sse"
+    timeout: 60000
+    initTimeout: 30000
 
 # File Configuration
 fileConfig:
