@@ -23,13 +23,31 @@ rateLimits:
 
 # Pre-configured Endpoints
 endpoints:
-  # AWS Bedrock - Claude, Llama, Mistral via AWS
+  # AWS Bedrock - Curated model list (latest versions only)
   bedrock:
     titleModel: "anthropic.claude-3-haiku-20240307-v1:0"
     streamRate: 35
     availableRegions:
       - "us-east-1"
-      - "us-west-2"
+    # Curated models - latest versions only, no legacy
+    models:
+      default:
+        # Claude 4.5 family (latest)
+        - "anthropic.claude-sonnet-4-5-20250929-v1:0"
+        - "anthropic.claude-haiku-4-5-20251001-v1:0"
+        # Claude 4 Opus (most capable)
+        - "anthropic.claude-opus-4-1-20250805-v1:0"
+        # Claude 3.5 (stable fallback)
+        - "anthropic.claude-3-5-sonnet-20241022-v2:0"
+        - "anthropic.claude-3-haiku-20240307-v1:0"
+        # Meta Llama 3.1 (latest, not Llama 2)
+        - "meta.llama3-1-70b-instruct-v1:0"
+        - "meta.llama3-1-8b-instruct-v1:0"
+        # Amazon Titan (AWS flagship)
+        - "amazon.titan-text-premier-v1:0"
+        # Mistral Large
+        - "mistral.mistral-large-2407-v1:0"
+      fetch: false
 
   # Custom Endpoints
   custom:
@@ -43,15 +61,14 @@ endpoints:
       titleConvo: true
       titleModel: "claude-sonnet-4-20250514"
       modelDisplayLabel: "Claude"
-      iconURL: "https://www.anthropic.com/favicon.ico"
 
     # GPT-4o via OpenAI
     - name: "GPT"
       apiKey: "${OPENAI_API_KEY}"
       baseURL: "https://api.openai.com/v1"
       models:
-        default: ["gpt-4o", "gpt-4o-mini", "gpt-4-turbo", "o1-preview", "o1-mini"]
-        fetch: true
+        default: ["gpt-4o", "gpt-4o-mini", "o1", "o1-mini"]
+        fetch: false
       titleConvo: true
       titleModel: "gpt-4o-mini"
       modelDisplayLabel: "GPT"
@@ -91,20 +108,9 @@ endpoints:
       titleModel: "grok-2-latest"
       modelDisplayLabel: "Grok"
 
-# NOTE: DeepSeek integration PAUSED for security concerns (2026-01-08)
-# NOTE: Vertex AI pending - requires Google Cloud service account JSON file
-
 # MCP Servers for Tool Integration (SSE Transport)
 mcpServers:
-  # Sovereign Mind Gateway via SSE - 218+ tools
   sovereign-mind:
-    type: sse
-    url: "https://sm-mcp-gateway-sse.lemoncoast-87756bcf.eastus.azurecontainerapps.io/sse"
-    timeout: 60000
-    initTimeout: 30000
-
-  # Load Balanced MCP via SSE
-  hivemind-mcp:
     type: sse
     url: "https://sm-mcp-gateway-sse.lemoncoast-87756bcf.eastus.azurecontainerapps.io/sse"
     timeout: 60000
