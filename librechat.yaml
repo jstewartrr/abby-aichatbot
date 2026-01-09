@@ -42,21 +42,6 @@ endpoints:
         - "mistral.mistral-large-2407-v1:0"
       fetch: false
 
-  # Azure OpenAI - Built-in endpoint
-  azureOpenAI:
-    titleModel: "gpt-4o"
-    plugins: true
-    groups:
-      - group: "sovereign-mind-openai"
-        apiKey: "${AZURE_OPENAI_API_KEY}"
-        instanceName: "sovereign-mind-openai"
-        deploymentName: "gpt-4o"
-        version: "2024-02-15-preview"
-        baseURL: "https://sovereign-mind-openai.openai.azure.com/openai/deployments/gpt-4o"
-        models:
-          gpt-4o:
-            deploymentName: "gpt-4o"
-
   # Custom Endpoints
   custom:
     # 1. OpenAI Direct API
@@ -70,7 +55,20 @@ endpoints:
       titleModel: "gpt-4o-mini"
       modelDisplayLabel: "OpenAI"
 
-    # 2. Claude via Anthropic Direct
+    # 2. Azure OpenAI (using cognitive services endpoint)
+    - name: "Azure OpenAI"
+      apiKey: "${AZURE_OPENAI_API_KEY}"
+      baseURL: "https://eastus.api.cognitive.microsoft.com/openai/deployments/gpt-4o"
+      models:
+        default: ["gpt-4o"]
+        fetch: false
+      headers:
+        api-version: "2024-02-15-preview"
+      titleConvo: true
+      titleModel: "gpt-4o"
+      modelDisplayLabel: "Azure OpenAI"
+
+    # 3. Claude via Anthropic Direct
     - name: "Anthropic"
       apiKey: "${ANTHROPIC_API_KEY}"
       baseURL: "https://api.anthropic.com/v1"
@@ -81,7 +79,7 @@ endpoints:
       titleModel: "claude-sonnet-4-20250514"
       modelDisplayLabel: "Anthropic"
 
-    # 3. Grok via xAI
+    # 4. Grok via xAI
     - name: "Grok"
       apiKey: "${XAI_API_KEY}"
       baseURL: "https://api.x.ai/v1"
@@ -92,7 +90,7 @@ endpoints:
       titleModel: "grok-2-latest"
       modelDisplayLabel: "Grok"
 
-    # 4. Gemini via Google AI Studio
+    # 5. Gemini via Google AI Studio
     - name: "Gemini"
       apiKey: "${GOOGLE_KEY}"
       baseURL: "https://generativelanguage.googleapis.com/v1beta/openai"
