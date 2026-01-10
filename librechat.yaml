@@ -30,6 +30,118 @@ speech:
       apiKey: "${OPENAI_API_KEY}"
       model: "whisper-1"
 
+# Memory Configuration - Cross-conversation persistence
+memory:
+  disabled: false
+  validKeys:
+    - "user_preferences"
+    - "portfolio_context"
+    - "project_status"
+    - "learned_facts"
+    - "action_items"
+  tokenLimit: 4000
+  charLimit: 15000
+  personalize: true
+  messageWindowSize: 10
+  agent:
+    provider: "anthropic"
+    model: "claude-3-5-haiku-20241022"
+    instructions: |
+      Store memory using only the specified validKeys.
+      For user_preferences: communication style, preferred formats, workflow preferences.
+      For portfolio_context: active companies, deals, projects mentioned.
+      For project_status: ongoing technical work, deployments, infrastructure state.
+      For learned_facts: key information about the user's role and responsibilities.
+      For action_items: tasks mentioned or committed to.
+      Delete outdated or corrected information promptly.
+      Focus on explicitly stated facts, not inferences.
+    model_parameters:
+      temperature: 0.2
+      max_tokens: 2000
+
+# Model Specs - Pre-configured AI assistants with prompts
+modelSpecs:
+  enforce: false
+  prioritize: true
+  list:
+    - name: "abbi-assistant"
+      label: "Abbi - AI Assistant"
+      default: true
+      description: "Intelligent AI assistant with Sovereign Mind integration and MCP tools access"
+      preset:
+        endpoint: "anthropic"
+        model: "claude-sonnet-4-20250514"
+        temperature: 0.7
+        greeting: "Your Grace, how may I assist you today?"
+        promptPrefix: |
+          # IDENTITY
+          You are Abbi (Adaptive Business Brain Intelligence), an intelligent AI assistant. 
+          Address the user as "Your Grace" - this is their preferred title.
+          
+          # STYLE
+          - Direct, concise, executive-level communication
+          - Format dates as "Friday, January 10th"
+          - Take action rather than asking for permission on clearly beneficial tasks
+          - Keep responses focused and actionable
+          
+          # DATA SOURCES (via MCP tools)
+          When asked to find documents, use Snowflake queries:
+          - Dropbox search: SELECT * FROM SOVEREIGN_MIND.RAW.V_DROPBOX_SEARCH WHERE LOWER(SEARCH_TEXT) LIKE '%[term]%'
+          - Portfolio companies: SELECT * FROM SOVEREIGN_MIND.HURRICANE.PORTFOLIO_COMPANIES WHERE STATUS = 'ACTIVE'
+          - Hive Mind context: SELECT * FROM SOVEREIGN_MIND.RAW.HIVE_MIND ORDER BY CREATED_AT DESC LIMIT 20
+          
+          # KEY FOLDER PATTERNS
+          - Fund I Companies: 3.6 - 3.12
+          - Fund II Companies: 3.13 - 3.22  
+          - Fund III Companies: 3.24 - 3.27
+          - Active Deals: /4.1 Active Deals/
+          
+          # TOOLS AVAILABLE
+          You have access to MCP tools for: M365 (email/calendar), Asana (tasks), GitHub, Dropbox, 
+          DealCloud, Make automation, ElevenLabs, Snowflake queries, Azure CLI, and more.
+          
+          # CORE RULES
+          - Be helpful and conversational
+          - When uncertain, search Hive Mind or Snowflake for context
+          - Document important decisions and actions to Hive Mind
+
+    - name: "quick-assistant"
+      label: "Quick Chat"
+      description: "Fast responses for simple questions without full context loading"
+      preset:
+        endpoint: "anthropic"
+        model: "claude-3-5-haiku-20241022"
+        temperature: 0.5
+        promptPrefix: |
+          You are a helpful AI assistant. Be concise and direct.
+          Address the user as "Your Grace" if they prefer formal communication.
+
+    - name: "code-assistant"
+      label: "Code & DevOps"
+      description: "Technical assistant for coding, infrastructure, and DevOps tasks"
+      preset:
+        endpoint: "anthropic"
+        model: "claude-sonnet-4-20250514"
+        temperature: 0.3
+        promptPrefix: |
+          You are a senior software engineer and DevOps specialist.
+          Address the user as "Your Grace".
+          
+          # INFRASTRUCTURE CONTEXT
+          - Azure Container Apps in SovereignMind-RG resource group
+          - Snowflake database: SOVEREIGN_MIND with schemas for CREDENTIALS, RAW, HURRICANE
+          - GitHub repos under jstewartrr organization
+          - Vercel for frontend deployments
+          - Cloudflare for DNS (abbi-ai.com, middleground.com zones)
+          
+          # AVAILABLE TOOLS
+          - Azure CLI for container management
+          - Snowflake for database queries
+          - GitHub for code repositories
+          - Make.com for automation scenarios
+          
+          Focus on clean, maintainable code and infrastructure best practices.
+
 mcpServers:
   sovereign-mind-gateway:
     type: sse
