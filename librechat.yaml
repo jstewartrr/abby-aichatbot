@@ -17,14 +17,43 @@ interface:
     create: true
     share: false
 
-# MCP Server Configuration - Using streamable-http transport with direct Azure URL
+# MCP Server Configuration - All 4 Sovereign Mind MCP Connections
 mcpServers:
+  # Load Balanced Gateway - Primary entry point with all integrations
+  sovereign-mind-lb:
+    type: streamable-http
+    url: "https://mcp.abbi-ai.com/mcp"
+    timeout: 60000
+    initTimeout: 30000
+    serverInstructions: true
+    chatMenu: true
+  
+  # Gateway V3 - Full integration gateway (Asana, DealCloud, Dropbox, ElevenLabs, Figma, Gemini, GitHub, M365, Make, Simli, Tailscale, Vercel, OpenAI, HiveMind)
   sovereign-mind-gateway:
     type: streamable-http
     url: "https://cv-sm-gateway-v3.lemoncoast-87756bcf.eastus.azurecontainerapps.io/mcp"
     timeout: 60000
     initTimeout: 30000
     serverInstructions: true
+    chatMenu: true
+  
+  # Snowflake - Direct database access
+  sovereign-mind-snowflake:
+    type: streamable-http
+    url: "https://cv-sm-snowflake-20260105.lemoncoast-87756bcf.eastus.azurecontainerapps.io/mcp"
+    timeout: 60000
+    initTimeout: 30000
+    serverInstructions: true
+    chatMenu: true
+  
+  # Azure CLI - Infrastructure management
+  sovereign-mind-azure:
+    type: streamable-http
+    url: "https://cv-sm-azure-cli-20260105.lemoncoast-87756bcf.eastus.azurecontainerapps.io/mcp"
+    timeout: 60000
+    initTimeout: 30000
+    serverInstructions: true
+    chatMenu: true
   
 registration:
   socialLogins: []
