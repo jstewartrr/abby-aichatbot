@@ -312,6 +312,8 @@ endpoints:
   openAI:
     streamRate: 25
     titleModel: "gpt-4o-mini"
+    titleConvo: true
+    titlePrompt: "Generate a short title (max 6 words) in format: [LC-MMDD] Topic. Use today's date for MMDD. Example: [LC-0110] LibreChat Session Config. The topic should describe what the conversation is about."
     models:
       - "gpt-4o"
       - "gpt-4o-mini"
@@ -322,6 +324,8 @@ endpoints:
   anthropic:
     streamRate: 25
     titleModel: "claude-3-5-haiku-20241022"
+    titleConvo: true
+    titlePrompt: "Generate a short title (max 6 words) in format: [LC-MMDD] Topic. Use today's date for MMDD. Example: [LC-0110] LibreChat Session Config. The topic should describe what the conversation is about."
     models:
       - "claude-sonnet-4-20250514"
       - "claude-3-5-sonnet-20241022"
@@ -331,6 +335,8 @@ endpoints:
   google:
     streamRate: 25
     titleModel: "gemini-1.5-flash"
+    titleConvo: true
+    titlePrompt: "Generate a short title (max 6 words) in format: [LC-MMDD] Topic. Use today's date for MMDD. Example: [LC-0110] LibreChat Session Config. The topic should describe what the conversation is about."
     models:
       - "gemini-2.0-flash-exp"
       - "gemini-2.0-flash"
@@ -340,6 +346,8 @@ endpoints:
   bedrock:
     streamRate: 35
     titleModel: "amazon.nova-lite-v1:0"
+    titleConvo: true
+    titlePrompt: "Generate a short title (max 6 words) in format: [LC-MMDD] Topic. Use today's date for MMDD. Example: [LC-0110] LibreChat Session Config. The topic should describe what the conversation is about."
     availableRegions:
       - "us-east-1"
     models:
@@ -365,6 +373,7 @@ endpoints:
         fetch: false
       titleConvo: true
       titleModel: "grok-3-fast"
+      titlePrompt: "Generate a short title (max 6 words) in format: [LC-MMDD] Topic. Use today's date for MMDD. Example: [LC-0110] LibreChat Session Config. The topic should describe what the conversation is about."
       modelDisplayLabel: "Grok (xAI)"
 
 fileConfig:
