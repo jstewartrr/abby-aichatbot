@@ -55,28 +55,40 @@ endpoints:
       - "chain"
       - "ocr"
 
-  # Built-in Anthropic
+  # Built-in Anthropic (direct API)
   anthropic:
-    models: ["claude-sonnet-4-20250514", "claude-opus-4-20250514", "claude-3-5-haiku-20241022"]
-    titleModel: "claude-sonnet-4-20250514"
+    streamRate: 25
+    titleModel: "claude-3-5-haiku-20241022"
 
-  # Built-in Bedrock - ONLY non-Anthropic/non-OpenAI models
+  # Built-in Google (Gemini via AI Studio)
+  google:
+    streamRate: 25
+    titleModel: "gemini-1.5-flash"
+
+  # AWS Bedrock
   bedrock:
-    titleModel: "meta.llama3-1-70b-instruct-v1:0"
     streamRate: 35
+    titleModel: "us.amazon.nova-lite-v1:0"
     availableRegions:
       - "us-east-1"
-    models:
-      - "meta.llama3-1-70b-instruct-v1:0"
-      - "meta.llama3-1-8b-instruct-v1:0"
-      - "amazon.titan-text-premier-v1:0"
-      - "mistral.mistral-large-2407-v1:0"
+
+  # Azure OpenAI
+  azureOpenAI:
+    titleModel: "gpt-4o"
+    groups:
+      - group: "sovereign-mind"
+        apiKey: "${AZURE_OPENAI_API_KEY}"
+        instanceName: "sovereign-mind-openai"
+        version: "2024-08-01-preview"
+        models:
+          gpt-4o:
+            deploymentName: "gpt-4o"
 
   # Disable assistants
   assistants:
     disabled: true
 
-  # Custom Endpoints for full control over names and models
+  # Custom Endpoints
   custom:
     # OpenAI
     - name: "OpenAI"
@@ -88,17 +100,6 @@ endpoints:
       titleConvo: true
       titleModel: "gpt-4o-mini"
       modelDisplayLabel: "OpenAI"
-
-    # Gemini (via Google AI Studio)
-    - name: "Gemini"
-      apiKey: "${GOOGLE_KEY}"
-      baseURL: "https://generativelanguage.googleapis.com/v1beta/openai"
-      models:
-        default: ["gemini-2.0-flash-exp", "gemini-1.5-pro", "gemini-1.5-flash"]
-        fetch: false
-      titleConvo: true
-      titleModel: "gemini-2.0-flash-exp"
-      modelDisplayLabel: "Gemini"
 
     # Grok (xAI)
     - name: "Grok"
