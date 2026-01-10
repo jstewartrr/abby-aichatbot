@@ -26,6 +26,27 @@ mcpServers:
     initTimeout: 30000
     serverInstructions: true
 
+  snowflake:
+    type: streamable-http
+    url: "https://cv-sm-snowflake-20260105.lemoncoast-87756bcf.eastus.azurecontainerapps.io/mcp"
+    timeout: 60000
+    initTimeout: 30000
+    serverInstructions: true
+
+  load-balanced-gateway:
+    type: streamable-http
+    url: "https://mcp.abbi-ai.com/mcp"
+    timeout: 60000
+    initTimeout: 30000
+    serverInstructions: true
+
+  azure-cli:
+    type: streamable-http
+    url: "https://cv-sm-azure-cli-20260105.lemoncoast-87756bcf.eastus.azurecontainerapps.io/mcp"
+    timeout: 60000
+    initTimeout: 30000
+    serverInstructions: true
+
 registration:
   socialLogins: []
   allowedDomains:
