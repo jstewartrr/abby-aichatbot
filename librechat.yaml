@@ -269,8 +269,8 @@ mcpServers:
     serverInstructions: true
 
   load-balanced-gateway:
-    type: streamable-http
-    url: "https://mcp.abbi-ai.com/mcp"
+    type: sse
+    url: "https://cv-sm-sentinel-lb-mcp.lemoncoast-87756bcf.eastus.azurecontainerapps.io/sse"
     timeout: 60000
     initTimeout: 30000
     serverInstructions: true
