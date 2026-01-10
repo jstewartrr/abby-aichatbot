@@ -12,7 +12,6 @@ interface:
   parameters: true
   presets: true
   sidePanel: true
-  # MCP UI Settings - Users can add their own MCP connections via Settings
   mcpServers:
     use: true
     create: true
@@ -70,58 +69,40 @@ endpoints:
       - "chain"
       - "ocr"
 
-  # Built-in OpenAI - Configure models (env var OPENAI_API_KEY enables this)
+  # Built-in OpenAI - models as array
   openAI:
-    models:
-      default: ["gpt-4o", "gpt-4o-mini", "o1", "o1-mini", "o3-mini"]
-      fetch: false
+    models: ["gpt-4o", "gpt-4o-mini", "o1", "o1-mini", "o3-mini"]
     titleModel: "gpt-4o-mini"
 
-  # Built-in Anthropic - Configure models (env var ANTHROPIC_API_KEY enables this)
+  # Built-in Anthropic - models as array
   anthropic:
-    models:
-      default: ["claude-sonnet-4-20250514", "claude-opus-4-20250514", "claude-3-5-haiku-20241022"]
-      fetch: false
+    models: ["claude-sonnet-4-20250514", "claude-opus-4-20250514", "claude-3-5-haiku-20241022"]
     titleModel: "claude-sonnet-4-20250514"
 
-  # Built-in Google/Gemini - Configure models (env var GOOGLE_KEY enables this)
+  # Built-in Google/Gemini - models as array
   google:
-    models:
-      default: ["gemini-2.0-flash-exp", "gemini-1.5-pro", "gemini-1.5-flash"]
-      fetch: false
+    models: ["gemini-2.0-flash-exp", "gemini-1.5-pro", "gemini-1.5-flash"]
     titleModel: "gemini-2.0-flash-exp"
 
-  # Built-in Azure OpenAI - DISABLE to avoid duplicate with OpenAI
-  azureOpenAI:
-    disabled: true
-
-  # Built-in Bedrock - Configure curated models (env vars AWS_* enable this)
+  # Built-in Bedrock - models as array
   bedrock:
     titleModel: "anthropic.claude-3-haiku-20240307-v1:0"
     streamRate: 35
     availableRegions:
       - "us-east-1"
     models:
-      default:
-        - "anthropic.claude-sonnet-4-5-20250929-v1:0"
-        - "anthropic.claude-haiku-4-5-20251001-v1:0"
-        - "anthropic.claude-opus-4-1-20250805-v1:0"
-        - "anthropic.claude-3-5-sonnet-20241022-v2:0"
-        - "anthropic.claude-3-haiku-20240307-v1:0"
-        - "meta.llama3-1-70b-instruct-v1:0"
-        - "meta.llama3-1-8b-instruct-v1:0"
-        - "amazon.titan-text-premier-v1:0"
-        - "mistral.mistral-large-2407-v1:0"
-      fetch: false
+      - "anthropic.claude-sonnet-4-5-20250929-v1:0"
+      - "anthropic.claude-haiku-4-5-20251001-v1:0"
+      - "anthropic.claude-opus-4-1-20250805-v1:0"
+      - "anthropic.claude-3-5-sonnet-20241022-v2:0"
+      - "anthropic.claude-3-haiku-20240307-v1:0"
+      - "meta.llama3-1-70b-instruct-v1:0"
+      - "meta.llama3-1-8b-instruct-v1:0"
+      - "amazon.titan-text-premier-v1:0"
+      - "mistral.mistral-large-2407-v1:0"
 
-  # Disable other built-in endpoints we don't use
+  # Disable assistants
   assistants:
-    disabled: true
-  chatGPTBrowser:
-    disabled: true
-  gptPlugins:
-    disabled: true
-  bingAI:
     disabled: true
 
   # Custom Endpoints - ONLY for providers without built-in support
