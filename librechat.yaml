@@ -17,11 +17,11 @@ interface:
     create: true
     share: false
 
-# MCP Server Configuration - Using streamable-http transport
+# MCP Server Configuration - Using streamable-http transport with direct Azure URL
 mcpServers:
   sovereign-mind-gateway:
     type: streamable-http
-    url: "https://mcp.abbi-ai.com/mcp"
+    url: "https://cv-sm-gateway-v3.lemoncoast-87756bcf.eastus.azurecontainerapps.io/mcp"
     timeout: 60000
     initTimeout: 30000
     serverInstructions: true
