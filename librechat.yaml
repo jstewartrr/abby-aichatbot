@@ -124,8 +124,8 @@ mcpServers:
     serverInstructions: true
 
   "CV CM Load Balanced MCP 20260106":
-    type: sse
-    url: "https://mcp.abbi-ai.com/sse"
+    type: streamable-http
+    url: "https://mcp.abbi-ai.com/mcp"
     timeout: 60000
     initTimeout: 30000
     serverInstructions: true
