@@ -23,16 +23,12 @@ rateLimits:
 
 # Endpoint Configuration
 endpoints:
-  # Disable ALL built-in endpoints to prevent duplicates
+  # Disable built-in endpoints to prevent duplicates
   openAI:
     disabled: true
   anthropic:
     disabled: true
-  azureOpenAI:
-    disabled: true
   google:
-    disabled: true
-  gptPlugins:
     disabled: true
   assistants:
     disabled: true
