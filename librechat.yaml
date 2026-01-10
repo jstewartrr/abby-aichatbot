@@ -1,4 +1,4 @@
-version: 1.1.7
+version: 1.3.1
 cache: true
 
 interface:
@@ -7,6 +7,15 @@ interface:
     externalUrl: "https://abbi-ai.com/privacy"
   termsOfService:
     externalUrl: "https://abbi-ai.com/terms"
+  endpointsMenu: true
+  modelSelect: true
+  parameters: true
+  presets: true
+  sidePanel: true
+  mcpServers:
+    use: true
+    create: true
+    share: false
   
 registration:
   socialLogins: []
@@ -32,6 +41,20 @@ endpoints:
     disabled: true
   assistants:
     disabled: true
+
+  # Agents Configuration
+  agents:
+    disableBuilder: false
+    capabilities:
+      - "execute_code"
+      - "file_search"
+      - "web_search"
+      - "artifacts"
+      - "actions"
+      - "context"
+      - "tools"
+      - "chain"
+      - "ocr"
 
   # AWS Bedrock - Curated model list
   bedrock:
@@ -59,7 +82,7 @@ endpoints:
       apiKey: "${OPENAI_API_KEY}"
       baseURL: "https://api.openai.com/v1"
       models:
-        default: ["gpt-4o", "gpt-4o-mini", "o1", "o1-mini"]
+        default: ["gpt-4o", "gpt-4o-mini", "o1", "o1-mini", "o3-mini"]
         fetch: false
       titleConvo: true
       titleModel: "gpt-4o-mini"
@@ -110,14 +133,6 @@ endpoints:
       titleConvo: true
       titleModel: "gemini-2.0-flash-exp"
       modelDisplayLabel: "Gemini"
-
-# MCP Servers for Tool Integration
-mcpServers:
-  sovereign-mind:
-    type: sse
-    url: "https://sm-mcp-gateway-sse.lemoncoast-87756bcf.eastus.azurecontainerapps.io/sse"
-    timeout: 60000
-    initTimeout: 30000
 
 # File Configuration
 fileConfig:
