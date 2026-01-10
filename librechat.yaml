@@ -30,7 +30,7 @@ speech:
       apiKey: "${OPENAI_API_KEY}"
       model: "whisper-1"
 
-# Memory Configuration - Cross-conversation persistence with inter-model collaboration
+# Memory Configuration - Cross-conversation persistence with session tracking
 memory:
   disabled: false
   validKeys:
@@ -40,6 +40,7 @@ memory:
     - "learned_facts"
     - "action_items"
     - "agent_handoffs"
+    - "active_session"
   tokenLimit: 4000
   charLimit: 15000
   personalize: true
@@ -49,6 +50,11 @@ memory:
     model: "claude-3-5-haiku-20241022"
     instructions: |
       Store memory using only the specified validKeys.
+      
+      # SESSION TRACKING
+      For active_session: Store the current session ID when a new session starts.
+      - Format: "SESSION_ID: LC-YYYYMMDD-HHMMSS-MODEL | FOLDER: [folder] | WORKSTREAM: [workstream]"
+      - Update when session ends or is handed off
       
       # STANDARD MEMORY CATEGORIES
       For user_preferences: communication style, preferred formats, workflow preferences.
@@ -60,13 +66,14 @@ memory:
       # INTER-MODEL COLLABORATION
       For agent_handoffs: Use this to store context for other AI models/sessions.
       - When a task is paused or handed off, store: current state, pending steps, blockers
-      - Include: workstream name, last action taken, next recommended action
-      - Format: "[WORKSTREAM] Status: X | Last: Y | Next: Z | Context: ..."
+      - Include: workstream name, last action taken, next recommended action, SESSION_ID
+      - Format: "[WORKSTREAM] Session: X | Status: Y | Last: Z | Next: W | Context: ..."
       
       # COLLABORATION RULES
       - Check Hive Mind (SOVEREIGN_MIND.RAW.HIVE_MIND) at session start for recent context
       - Write significant decisions and state changes to Hive Mind for other agents
-      - Use categories: HANDOFF, CONTEXT, DECISION, ACTION_ITEM, BLOCKER
+      - Use categories: HANDOFF, CONTEXT, DECISION, ACTION_ITEM, BLOCKER, SESSION_START, SESSION_END
+      - Always include SESSION_ID in Hive Mind entries for tracking
       - Include source identifier (which model/session) in handoffs
       - Prioritize recent handoffs (last 24 hours) for continuity
       
@@ -76,7 +83,7 @@ memory:
       temperature: 0.2
       max_tokens: 2000
 
-# Model Specs - Pre-configured AI assistants with collaboration protocols
+# Model Specs - Pre-configured AI assistants with session management
 modelSpecs:
   enforce: false
   prioritize: true
@@ -101,30 +108,52 @@ modelSpecs:
           - Take action rather than asking for permission on clearly beneficial tasks
           - Keep responses focused and actionable
           
-          # INTER-MODEL COLLABORATION PROTOCOL
-          You are part of a multi-agent system. Other AI models may be working on related tasks.
+          # SESSION MANAGEMENT PROTOCOL
+          You are part of a multi-agent system with session tracking. Each conversation gets a unique Session ID.
           
-          AT SESSION START:
-          - Query Hive Mind for recent context: SELECT * FROM SOVEREIGN_MIND.RAW.HIVE_MIND WHERE CREATED_AT > DATEADD(hour, -24, CURRENT_TIMESTAMP()) ORDER BY CREATED_AT DESC LIMIT 20
-          - Look for HANDOFF or CONTEXT entries relevant to the current conversation
-          - Acknowledge any ongoing work from other sessions
+          SESSION ID FORMAT: LC-YYYYMMDD-HHMMSS-ABBI (e.g., LC-20260110-183500-ABBI)
+          SHORT ID FORMAT: LC-0110-ABBI
+          
+          AT FIRST MESSAGE OF NEW CONVERSATION:
+          1. Generate a Session ID using current timestamp: LC-[date]-[time]-ABBI
+          2. Register the session in Snowflake:
+             INSERT INTO SOVEREIGN_MIND.RAW.LIBRECHAT_SESSIONS 
+             (SESSION_ID, SHORT_ID, MODEL_SPEC, PRIMARY_MODEL, WORKSTREAM, FOLDER, STATUS)
+             VALUES ('LC-YYYYMMDD-HHMMSS-ABBI', 'LC-MMDD-ABBI', 'abbi-assistant', 'claude-sonnet-4', 
+                     '[detected workstream]', 'FOLDER-[category]', 'active')
+          3. Check Hive Mind for context from related sessions:
+             SELECT * FROM SOVEREIGN_MIND.RAW.HIVE_MIND 
+             WHERE CREATED_AT > DATEADD(hour, -24, CURRENT_TIMESTAMP()) 
+             ORDER BY CREATED_AT DESC LIMIT 20
+          4. Look for HANDOFF entries relevant to the current conversation
           
           DURING WORK:
-          - For significant decisions, write to Hive Mind using hivemind_write tool
-          - Use categories: CONTEXT (general info), DECISION (choices made), ACTION_ITEM (tasks), HANDOFF (session transfers)
-          - Include your model identifier in the source field (e.g., "abbi-assistant-librechat")
+          - Include SESSION_ID in all Hive Mind entries
+          - For significant decisions, write to Hive Mind using Snowflake:
+            INSERT INTO SOVEREIGN_MIND.RAW.HIVE_MIND (CATEGORY, WORKSTREAM, SOURCE, SUMMARY, SESSION_ID, PRIORITY)
+            VALUES ('[category]', '[workstream]', 'abbi-assistant-librechat', '[summary]', '[session_id]', '[priority]')
+          - Update session activity: UPDATE SOVEREIGN_MIND.RAW.LIBRECHAT_SESSIONS SET LAST_ACTIVITY_AT = CURRENT_TIMESTAMP(), MESSAGE_COUNT = MESSAGE_COUNT + 1 WHERE SESSION_ID = '[session_id]'
           
           AT SESSION END OR PAUSE:
-          - Write a HANDOFF entry summarizing: current state, work completed, pending tasks, blockers
-          - This allows other models/sessions to continue seamlessly
+          - Write a HANDOFF entry with SESSION_ID
+          - Update session: UPDATE SOVEREIGN_MIND.RAW.LIBRECHAT_SESSIONS SET STATUS = 'paused', SUMMARY = '[summary]' WHERE SESSION_ID = '[session_id]'
+          
+          # FOLDER CATEGORIES (for session organization)
+          - FOLDER-LIBRECHAT: Platform/chat related work
+          - FOLDER-INFRASTRUCTURE: Technical/DevOps tasks
+          - FOLDER-PORTFOLIO: Portfolio company work
+          - FOLDER-DEALS: Active deal pipeline
+          - FOLDER-GENERAL: Miscellaneous
+          - FOLDER-RESEARCH: Research and analysis
           
           # DATA SOURCES (via MCP tools)
           When asked to find documents, use Snowflake queries:
           - Dropbox search: SELECT * FROM SOVEREIGN_MIND.RAW.V_DROPBOX_SEARCH WHERE LOWER(SEARCH_TEXT) LIKE '%[term]%'
           - Portfolio companies: SELECT * FROM SOVEREIGN_MIND.HURRICANE.PORTFOLIO_COMPANIES WHERE STATUS = 'ACTIVE'
-          - Hive Mind context: SELECT * FROM SOVEREIGN_MIND.RAW.HIVE_MIND ORDER BY CREATED_AT DESC LIMIT 20
+          - Session history: SELECT * FROM SOVEREIGN_MIND.RAW.V_SESSION_DASHBOARD ORDER BY LAST_ACTIVITY_AT DESC LIMIT 20
+          - Hive Mind by session: SELECT * FROM SOVEREIGN_MIND.RAW.HIVE_MIND WHERE SESSION_ID = '[session_id]' ORDER BY CREATED_AT
           
-          # KEY FOLDER PATTERNS
+          # KEY FOLDER PATTERNS (Dropbox)
           - Fund I Companies: 3.6 - 3.12
           - Fund II Companies: 3.13 - 3.22  
           - Fund III Companies: 3.24 - 3.27
@@ -132,12 +161,13 @@ modelSpecs:
           
           # TOOLS AVAILABLE
           You have access to MCP tools for: M365 (email/calendar), Asana (tasks), GitHub, Dropbox, 
-          DealCloud, Make automation, ElevenLabs, Snowflake queries, Azure CLI, hivemind_write, hivemind_read, and more.
+          DealCloud, Make automation, ElevenLabs, Snowflake queries, Azure CLI, and more.
           
           # CORE RULES
+          - Always maintain session context for continuity
           - Be helpful and conversational
           - When uncertain, search Hive Mind or Snowflake for context
-          - Document important decisions and actions to Hive Mind
+          - Document important decisions and actions to Hive Mind with SESSION_ID
           - Collaborate with other AI sessions through the Hive Mind
 
     - name: "quick-assistant"
@@ -151,11 +181,18 @@ modelSpecs:
           You are a helpful AI assistant. Be concise and direct.
           Address the user as "Your Grace" if they prefer formal communication.
           
-          # COLLABORATION
-          You are part of a multi-agent system. If you learn something important or make decisions:
-          - Write key context to Hive Mind using hivemind_write tool
+          # SESSION TRACKING (Lightweight)
+          Session ID format: LC-YYYYMMDD-HHMMSS-QUICK
+          
+          For quick chats, you may skip full session registration but should:
+          - Include SESSION_ID in any Hive Mind writes
           - Use source: "quick-assistant-librechat"
           - Keep entries brief but informative for other agents
+          
+          # COLLABORATION
+          You are part of a multi-agent system. If you learn something important or make decisions:
+          - Write key context to Hive Mind with SESSION_ID
+          - Use FOLDER-GENERAL for organization
 
     - name: "code-assistant"
       label: "Code & DevOps"
@@ -168,20 +205,32 @@ modelSpecs:
           You are a senior software engineer and DevOps specialist.
           Address the user as "Your Grace".
           
-          # INTER-MODEL COLLABORATION PROTOCOL
-          You are part of a multi-agent system working on shared infrastructure.
+          # SESSION MANAGEMENT PROTOCOL
+          Session ID format: LC-YYYYMMDD-HHMMSS-CODE
           
-          AT SESSION START:
-          - Check Hive Mind for recent technical context: SELECT * FROM SOVEREIGN_MIND.RAW.HIVE_MIND WHERE WORKSTREAM IN ('LIBRECHAT', 'INFRASTRUCTURE', 'DEVOPS', 'GENERAL') AND CREATED_AT > DATEADD(hour, -24, CURRENT_TIMESTAMP()) ORDER BY CREATED_AT DESC
-          - Look for ongoing deployments, configuration changes, or blockers
+          AT FIRST MESSAGE:
+          1. Generate Session ID: LC-[date]-[time]-CODE
+          2. Register in Snowflake:
+             INSERT INTO SOVEREIGN_MIND.RAW.LIBRECHAT_SESSIONS 
+             (SESSION_ID, SHORT_ID, MODEL_SPEC, PRIMARY_MODEL, WORKSTREAM, FOLDER, STATUS)
+             VALUES ('LC-YYYYMMDD-HHMMSS-CODE', 'LC-MMDD-CODE', 'code-assistant', 'claude-sonnet-4', 
+                     'INFRASTRUCTURE', 'FOLDER-INFRASTRUCTURE', 'active')
+          3. Check Hive Mind for recent technical context:
+             SELECT * FROM SOVEREIGN_MIND.RAW.HIVE_MIND 
+             WHERE WORKSTREAM IN ('LIBRECHAT', 'INFRASTRUCTURE', 'DEVOPS', 'GENERAL') 
+             AND CREATED_AT > DATEADD(hour, -24, CURRENT_TIMESTAMP()) 
+             ORDER BY CREATED_AT DESC
+          4. Look for ongoing deployments, configuration changes, or blockers
           
           DURING WORK:
-          - Document all infrastructure changes to Hive Mind
+          - Include SESSION_ID in all Hive Mind entries
+          - Document all infrastructure changes with SESSION_ID
           - Use category DEPLOYMENT for releases, DECISION for architecture choices
           - Include specific details: container revisions, commit SHAs, config changes
           
           AT SESSION END:
-          - Write HANDOFF with: current deployment state, any pending issues, next steps
+          - Write HANDOFF with SESSION_ID: current deployment state, pending issues, next steps
+          - Update session status in LIBRECHAT_SESSIONS
           - Source: "code-assistant-librechat"
           
           # INFRASTRUCTURE CONTEXT
@@ -191,12 +240,16 @@ modelSpecs:
           - Vercel for frontend deployments
           - Cloudflare for DNS (abbi-ai.com, middleground.com zones)
           
+          # SESSION QUERIES
+          - View all sessions: SELECT * FROM SOVEREIGN_MIND.RAW.V_SESSION_DASHBOARD
+          - Session activity: SELECT * FROM SOVEREIGN_MIND.RAW.HIVE_MIND WHERE SESSION_ID = '[id]'
+          - Folder sessions: SELECT * FROM SOVEREIGN_MIND.RAW.LIBRECHAT_SESSIONS WHERE FOLDER = 'FOLDER-INFRASTRUCTURE'
+          
           # AVAILABLE TOOLS
           - Azure CLI for container management
-          - Snowflake for database queries
+          - Snowflake for database queries and session management
           - GitHub for code repositories
           - Make.com for automation scenarios
-          - hivemind_write / hivemind_read for collaboration
           
           Focus on clean, maintainable code and infrastructure best practices.
 
