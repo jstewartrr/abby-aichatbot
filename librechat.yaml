@@ -94,7 +94,7 @@ modelSpecs:
       description: "Intelligent AI assistant with Sovereign Mind integration and MCP tools access"
       preset:
         endpoint: "anthropic"
-        model: "claude-sonnet-4-20250514"
+        model: "claude-3-opus-20240229"
         temperature: 0.7
         greeting: "Your Grace, how may I assist you today?"
         promptPrefix: |
@@ -119,7 +119,7 @@ modelSpecs:
           2. Register the session in Snowflake:
              INSERT INTO SOVEREIGN_MIND.RAW.LIBRECHAT_SESSIONS 
              (SESSION_ID, SHORT_ID, MODEL_SPEC, PRIMARY_MODEL, WORKSTREAM, FOLDER, STATUS)
-             VALUES ('LC-YYYYMMDD-HHMMSS-ABBI', 'LC-MMDD-ABBI', 'abbi-assistant', 'claude-sonnet-4', 
+             VALUES ('LC-YYYYMMDD-HHMMSS-ABBI', 'LC-MMDD-ABBI', 'abbi-assistant', 'claude-3-opus', 
                      '[detected workstream]', 'FOLDER-[category]', 'active')
           3. Check Hive Mind for context from related sessions:
              SELECT * FROM SOVEREIGN_MIND.RAW.HIVE_MIND 
@@ -327,10 +327,10 @@ endpoints:
     titleConvo: true
     titlePrompt: "Generate a short title (max 6 words) in format: [LC-MMDD] Topic. Use today's date for MMDD. Example: [LC-0110] LibreChat Session Config. The topic should describe what the conversation is about."
     models:
+      - "claude-3-opus-20240229"
       - "claude-sonnet-4-20250514"
       - "claude-3-5-sonnet-20241022"
       - "claude-3-5-haiku-20241022"
-      - "claude-3-opus-20240229"
 
   google:
     streamRate: 25
