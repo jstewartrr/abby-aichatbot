@@ -21,8 +21,22 @@ rateLimits:
     userMax: 50
     userWindowInMinutes: 60
 
-# Pre-configured Endpoints
+# Endpoint Configuration
 endpoints:
+  # Disable ALL built-in endpoints to prevent duplicates
+  openAI:
+    disabled: true
+  anthropic:
+    disabled: true
+  azureOpenAI:
+    disabled: true
+  google:
+    disabled: true
+  gptPlugins:
+    disabled: true
+  assistants:
+    disabled: true
+
   # AWS Bedrock - Curated model list
   bedrock:
     titleModel: "anthropic.claude-3-haiku-20240307-v1:0"
