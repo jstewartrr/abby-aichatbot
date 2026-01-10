@@ -18,6 +18,18 @@ interface:
     create: true
     share: true
 
+speech:
+  tts:
+    elevenlabs:
+      apiKey: "${ELEVENLABS_API_KEY}"
+      model: "eleven_turbo_v2"
+      voices:
+        - "aRlmTYIQo6Tlg5SlulGC"
+  stt:
+    openai:
+      apiKey: "${OPENAI_API_KEY}"
+      model: "whisper-1"
+
 mcpServers:
   sovereign-mind-gateway:
     type: sse
