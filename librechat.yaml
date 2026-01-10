@@ -12,6 +12,7 @@ interface:
   parameters: true
   presets: true
   sidePanel: true
+  agents: true
   mcpServers:
     use: true
     create: true
