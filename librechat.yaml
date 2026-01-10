@@ -93,11 +93,8 @@ endpoints:
       - "amazon.nova-pro-v1:0"
       - "amazon.nova-lite-v1:0"
 
-  azureOpenAI:
-    disabled: true
-
   assistants:
-    disabled: true
+    disableBuilder: true
 
   custom:
     - name: "Grok"
