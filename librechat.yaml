@@ -100,6 +100,17 @@ endpoints:
       titleModel: "gemini-2.0-flash-exp"
       modelDisplayLabel: "Gemini"
 
+    # Grok (xAI)
+    - name: "Grok"
+      apiKey: "${XAI_API_KEY}"
+      baseURL: "https://api.x.ai/v1"
+      models:
+        default: ["grok-3", "grok-3-fast", "grok-2-1212"]
+        fetch: false
+      titleConvo: true
+      titleModel: "grok-3-fast"
+      modelDisplayLabel: "Grok (xAI)"
+
 # File Configuration
 fileConfig:
   endpoints:
