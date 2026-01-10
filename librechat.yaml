@@ -26,8 +26,8 @@ mcpServers:
     initTimeout: 30000
     serverInstructions: true
   grok-mcp:
-    type: sse
-    url: "https://cv-sm-grok-20260105.lemoncoast-87756bcf.eastus.azurecontainerapps.io/sse"
+    type: streamable-http
+    url: "https://cv-sm-grok-20260105.lemoncoast-87756bcf.eastus.azurecontainerapps.io/mcp"
     timeout: 60000
     initTimeout: 30000
     serverInstructions: true
