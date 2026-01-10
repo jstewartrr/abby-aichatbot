@@ -17,11 +17,17 @@ interface:
     create: true
     share: true
 
-# MCP Server Configuration - Only working gateway
+# MCP Server Configuration
 mcpServers:
   sovereign-mind-gateway:
     type: sse
     url: "https://cv-sm-gateway-v3.lemoncoast-87756bcf.eastus.azurecontainerapps.io/sse"
+    timeout: 60000
+    initTimeout: 30000
+    serverInstructions: true
+  grok-mcp:
+    type: sse
+    url: "https://cv-sm-grok-20260105.lemoncoast-87756bcf.eastus.azurecontainerapps.io/sse"
     timeout: 60000
     initTimeout: 30000
     serverInstructions: true
@@ -99,17 +105,6 @@ endpoints:
       titleConvo: true
       titleModel: "gemini-2.0-flash-exp"
       modelDisplayLabel: "Gemini"
-
-    # Grok via xAI
-    - name: "Grok"
-      apiKey: "${XAI_API_KEY}"
-      baseURL: "https://api.x.ai/v1"
-      models:
-        default: ["grok-2-latest", "grok-2-vision-1212", "grok-beta"]
-        fetch: false
-      titleConvo: true
-      titleModel: "grok-2-latest"
-      modelDisplayLabel: "Grok (xAI)"
 
 # File Configuration
 fileConfig:
