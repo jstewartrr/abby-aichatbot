@@ -12,49 +12,35 @@ interface:
   parameters: true
   presets: true
   sidePanel: true
+  # MCP UI Settings - Users can add their own MCP connections via Settings
   mcpServers:
     use: true
     create: true
-    share: false
+    share: true
 
-# MCP Server Configuration - All 4 Sovereign Mind MCP Connections
+# MCP Server Configuration - Using SSE transport
 mcpServers:
-  # Load Balanced Gateway - Primary entry point with all integrations
-  sovereign-mind-lb:
-    type: streamable-http
-    url: "https://mcp.abbi-ai.com/mcp"
-    timeout: 60000
-    initTimeout: 30000
-    serverInstructions: true
-    chatMenu: true
-  
-  # Gateway V3 - Full integration gateway (Asana, DealCloud, Dropbox, ElevenLabs, Figma, Gemini, GitHub, M365, Make, Simli, Tailscale, Vercel, OpenAI, HiveMind)
   sovereign-mind-gateway:
-    type: streamable-http
-    url: "https://cv-sm-gateway-v3.lemoncoast-87756bcf.eastus.azurecontainerapps.io/mcp"
+    type: sse
+    url: "https://cv-sm-gateway-v3.lemoncoast-87756bcf.eastus.azurecontainerapps.io/sse"
     timeout: 60000
     initTimeout: 30000
     serverInstructions: true
-    chatMenu: true
   
-  # Snowflake - Direct database access
   sovereign-mind-snowflake:
-    type: streamable-http
-    url: "https://cv-sm-snowflake-20260105.lemoncoast-87756bcf.eastus.azurecontainerapps.io/mcp"
+    type: sse
+    url: "https://cv-sm-snowflake-20260105.lemoncoast-87756bcf.eastus.azurecontainerapps.io/sse"
     timeout: 60000
     initTimeout: 30000
     serverInstructions: true
-    chatMenu: true
   
-  # Azure CLI - Infrastructure management
   sovereign-mind-azure:
-    type: streamable-http
-    url: "https://cv-sm-azure-cli-20260105.lemoncoast-87756bcf.eastus.azurecontainerapps.io/mcp"
+    type: sse
+    url: "https://cv-sm-azure-cli-20260105.lemoncoast-87756bcf.eastus.azurecontainerapps.io/sse"
     timeout: 60000
     initTimeout: 30000
     serverInstructions: true
-    chatMenu: true
-  
+
 registration:
   socialLogins: []
   allowedDomains:
@@ -70,16 +56,6 @@ rateLimits:
 
 # Endpoint Configuration
 endpoints:
-  # Disable built-in endpoints to prevent duplicates
-  openAI:
-    disabled: true
-  anthropic:
-    disabled: true
-  google:
-    disabled: true
-  assistants:
-    disabled: true
-
   # Agents Configuration
   agents:
     disableBuilder: false
@@ -94,7 +70,32 @@ endpoints:
       - "chain"
       - "ocr"
 
-  # AWS Bedrock - Curated model list
+  # Built-in OpenAI - Configure models (env var OPENAI_API_KEY enables this)
+  openAI:
+    models:
+      default: ["gpt-4o", "gpt-4o-mini", "o1", "o1-mini", "o3-mini"]
+      fetch: false
+    titleModel: "gpt-4o-mini"
+
+  # Built-in Anthropic - Configure models (env var ANTHROPIC_API_KEY enables this)
+  anthropic:
+    models:
+      default: ["claude-sonnet-4-20250514", "claude-opus-4-20250514", "claude-3-5-haiku-20241022"]
+      fetch: false
+    titleModel: "claude-sonnet-4-20250514"
+
+  # Built-in Google/Gemini - Configure models (env var GOOGLE_KEY enables this)
+  google:
+    models:
+      default: ["gemini-2.0-flash-exp", "gemini-1.5-pro", "gemini-1.5-flash"]
+      fetch: false
+    titleModel: "gemini-2.0-flash-exp"
+
+  # Built-in Azure OpenAI - DISABLE to avoid duplicate with OpenAI
+  azureOpenAI:
+    disabled: true
+
+  # Built-in Bedrock - Configure curated models (env vars AWS_* enable this)
   bedrock:
     titleModel: "anthropic.claude-3-haiku-20240307-v1:0"
     streamRate: 35
@@ -113,44 +114,19 @@ endpoints:
         - "mistral.mistral-large-2407-v1:0"
       fetch: false
 
-  # Custom Endpoints
+  # Disable other built-in endpoints we don't use
+  assistants:
+    disabled: true
+  chatGPTBrowser:
+    disabled: true
+  gptPlugins:
+    disabled: true
+  bingAI:
+    disabled: true
+
+  # Custom Endpoints - ONLY for providers without built-in support
   custom:
-    # 1. OpenAI Direct API
-    - name: "OpenAI"
-      apiKey: "${OPENAI_API_KEY}"
-      baseURL: "https://api.openai.com/v1"
-      models:
-        default: ["gpt-4o", "gpt-4o-mini", "o1", "o1-mini", "o3-mini"]
-        fetch: false
-      titleConvo: true
-      titleModel: "gpt-4o-mini"
-      modelDisplayLabel: "OpenAI"
-
-    # 2. Azure OpenAI (using cognitive services endpoint)
-    - name: "Azure OpenAI"
-      apiKey: "${AZURE_OPENAI_API_KEY}"
-      baseURL: "https://eastus.api.cognitive.microsoft.com/openai/deployments/gpt-4o"
-      models:
-        default: ["gpt-4o"]
-        fetch: false
-      headers:
-        api-version: "2024-02-15-preview"
-      titleConvo: true
-      titleModel: "gpt-4o"
-      modelDisplayLabel: "Azure OpenAI"
-
-    # 3. Claude via Anthropic Direct
-    - name: "Anthropic"
-      apiKey: "${ANTHROPIC_API_KEY}"
-      baseURL: "https://api.anthropic.com/v1"
-      models:
-        default: ["claude-sonnet-4-20250514", "claude-opus-4-20250514", "claude-3-5-haiku-20241022"]
-        fetch: false
-      titleConvo: true
-      titleModel: "claude-sonnet-4-20250514"
-      modelDisplayLabel: "Anthropic"
-
-    # 4. Grok via xAI
+    # Grok via xAI (no built-in endpoint exists)
     - name: "Grok"
       apiKey: "${XAI_API_KEY}"
       baseURL: "https://api.x.ai/v1"
@@ -159,18 +135,7 @@ endpoints:
         fetch: false
       titleConvo: true
       titleModel: "grok-2-latest"
-      modelDisplayLabel: "Grok"
-
-    # 5. Gemini via Google AI Studio
-    - name: "Gemini"
-      apiKey: "${GOOGLE_KEY}"
-      baseURL: "https://generativelanguage.googleapis.com/v1beta/openai"
-      models:
-        default: ["gemini-2.0-flash-exp", "gemini-1.5-pro", "gemini-1.5-flash"]
-        fetch: false
-      titleConvo: true
-      titleModel: "gemini-2.0-flash-exp"
-      modelDisplayLabel: "Gemini"
+      modelDisplayLabel: "Grok (xAI)"
 
 # File Configuration
 fileConfig:
