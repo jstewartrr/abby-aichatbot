@@ -254,28 +254,28 @@ modelSpecs:
           Focus on clean, maintainable code and infrastructure best practices.
 
 mcpServers:
-  sovereign-mind-gateway:
+  "CV SM Gateway V3 20260105":
     type: sse
     url: "https://cv-sm-gateway-v3.lemoncoast-87756bcf.eastus.azurecontainerapps.io/sse"
     timeout: 60000
     initTimeout: 30000
     serverInstructions: true
 
-  snowflake:
+  "CV SM Snowflake 20260105":
     type: streamable-http
     url: "https://cv-sm-snowflake-20260105.lemoncoast-87756bcf.eastus.azurecontainerapps.io/mcp"
     timeout: 60000
     initTimeout: 30000
     serverInstructions: true
 
-  load-balanced-gateway:
+  "CV CM Load Balanced MCP 20260106":
     type: sse
     url: "https://cv-sm-sentinel-lb-mcp.lemoncoast-87756bcf.eastus.azurecontainerapps.io/sse"
     timeout: 60000
     initTimeout: 30000
     serverInstructions: true
 
-  azure-cli:
+  "CV SM Azure CLI 20260105":
     type: streamable-http
     url: "https://cv-sm-azure-cli-20260105.lemoncoast-87756bcf.eastus.azurecontainerapps.io/mcp"
     timeout: 60000
