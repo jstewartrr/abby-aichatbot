@@ -17,11 +17,36 @@ interface:
     create: true
     share: true
 
-# MCP Server Configuration - Load Balanced Gateway
+# MCP Server Configuration - All 4 Sovereign Mind MCP Servers
 mcpServers:
-  sovereign-mind-gateway:
-    type: streamable-http
-    url: "https://mcp.abbi-ai.com/mcp"
+  # Load Balanced Gateway (primary - routes to all backends)
+  sm-load-balancer:
+    type: sse
+    url: "https://mcp.abbi-ai.com/sse"
+    timeout: 60000
+    initTimeout: 30000
+    serverInstructions: true
+
+  # Gateway V3 Direct (221 tools - M365, Asana, GitHub, Dropbox, Make, etc.)
+  sm-gateway-v3:
+    type: sse
+    url: "https://cv-sm-gateway-v3.lemoncoast-87756bcf.eastus.azurecontainerapps.io/sse"
+    timeout: 60000
+    initTimeout: 30000
+    serverInstructions: true
+
+  # Snowflake Direct (Database queries and management)
+  sm-snowflake:
+    type: sse
+    url: "https://cv-sm-snowflake-20260105.lemoncoast-87756bcf.eastus.azurecontainerapps.io/sse"
+    timeout: 60000
+    initTimeout: 30000
+    serverInstructions: true
+
+  # Azure CLI (Container Apps, ACR, Azure management)
+  sm-azure-cli:
+    type: sse
+    url: "https://cv-sm-azure-cli-20260105.lemoncoast-87756bcf.eastus.azurecontainerapps.io/sse"
     timeout: 60000
     initTimeout: 30000
     serverInstructions: true
