@@ -46,7 +46,7 @@
         .model-list-item .model-indicator{width:8px;height:8px}
         .model-list-name{font-size:13px;color:var(--text-secondary)}
         .chat-area{display:flex;flex-direction:column;background:var(--primary-900);overflow:hidden}
-        .chat-messages{flex:1;overflow-y:auto;padding:24px;display:flex;flex-direction:column;gap:24px;-webkit-overflow-scrolling:touch}
+        .chat-messages{flex:1;overflow-y:auto;overflow-x:hidden;padding:24px;display:flex;flex-direction:column;gap:24px;-webkit-overflow-scrolling:touch;scroll-behavior:smooth}
         .message{display:flex;gap:16px;max-width:100%}
         .message-avatar{width:36px;height:36px;border-radius:10px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:14px}
         .message.user .message-avatar{background:linear-gradient(135deg,var(--accent-primary),var(--gemini-color))}
@@ -57,7 +57,7 @@
         .message-model{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text-muted)}
         .message-model .model-indicator{width:6px;height:6px}
         .message-time{font-size:12px;color:var(--text-muted);margin-left:auto}
-        .message-text{font-size:15px;line-height:1.7;color:var(--text-secondary);word-wrap:break-word}
+        .message-text{font-size:15px;line-height:1.5;color:var(--text-secondary);word-wrap:break-word;overflow-wrap:break-word}
         .message.ai .message-text{background:var(--primary-800);padding:16px 20px;border-radius:12px;border:1px solid var(--border-subtle)}
         .message-actions{display:flex;align-items:center;gap:8px;margin-top:8px}
         .action-btn{display:flex;align-items:center;gap:6px;padding:6px 12px;background:transparent;border:1px solid var(--border-subtle);border-radius:6px;color:var(--text-muted);font-size:12px;cursor:pointer}
@@ -108,6 +108,12 @@
         .model-picker-name{font-size:15px;font-weight:500}
         .model-picker-desc{font-size:12px;color:var(--text-muted);margin-top:2px}
         @media(max-width:768px){::-webkit-scrollbar{width:0;display:none}}
+        .upload-menu-container{position:relative}
+        .upload-menu{position:absolute;bottom:100%;left:0;background:var(--primary-700);border:1px solid var(--border-primary);border-radius:12px;padding:8px;margin-bottom:8px;display:none;min-width:180px;box-shadow:0 4px 12px rgba(0,0,0,0.3);z-index:1000}
+        .upload-menu.open{display:block}
+        .upload-option{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:8px;cursor:pointer;font-size:14px;transition:background .2s}
+        .upload-option:hover{background:var(--primary-600)}
+        .upload-option span:first-child{font-size:16px}
     </style>
 </head>
 <body>
@@ -140,15 +146,19 @@
                 <div class="chat-list"></div>
             </div>
             <div class="sidebar-section">
-                <div class="sidebar-title">Spaces</div>
-                <div class="space-item" onclick="toggleSidebar()"><span class="space-icon">🧠</span><span class="space-name">Sovereign Mind</span></div>
-                <div class="space-item" onclick="toggleSidebar()"><span class="space-icon">💼</span><span class="space-name">MiddleGround Capital</span></div>
+                <div class="sidebar-title">Folders</div>
+                <button class="new-chat-btn" onclick="createFolder()" style="margin-bottom:12px">
+                    <span>📁</span><span>New Folder</span>
+                </button>
+                <div class="folder-list" id="folderList"></div>
             </div>
             <div class="sidebar-section">
                 <div class="sidebar-title">Models</div>
-                <div class="model-list-item" onclick="selectModel('claude');toggleSidebar()"><div class="model-indicator" style="background:var(--claude-color)"></div><span class="model-list-name">Claude Opus 4.5 ⭐</span></div>
-                <div class="model-list-item" onclick="selectModel('gemini');toggleSidebar()"><div class="model-indicator" style="background:var(--gemini-color)"></div><span class="model-list-name">Gemini 2.0</span></div>
-                <div class="model-list-item" onclick="selectModel('gpt');toggleSidebar()"><div class="model-indicator" style="background:var(--gpt-color)"></div><span class="model-list-name">GPT-4o</span></div>
+                <div class="model-list-item" onclick="selectModel('claude-opus');toggleSidebar()"><div class="model-indicator" style="background:var(--claude-color)"></div><span class="model-list-name">Claude Opus 4.5 ⭐</span></div>
+                <div class="model-list-item" onclick="selectModel('claude-sonnet');toggleSidebar()"><div class="model-indicator" style="background:var(--claude-color)"></div><span class="model-list-name">Claude Sonnet 4</span></div>
+                <div class="model-list-item" onclick="selectModel('gpt-4o');toggleSidebar()"><div class="model-indicator" style="background:var(--gpt-color)"></div><span class="model-list-name">GPT-4o</span></div>
+                <div class="model-list-item" onclick="selectModel('gemini-2');toggleSidebar()"><div class="model-indicator" style="background:var(--gemini-color)"></div><span class="model-list-name">Gemini 2.0 Flash</span></div>
+                <div class="model-list-item" onclick="selectModel('grok-3');toggleSidebar()"><div class="model-indicator" style="background:var(--grok-color)"></div><span class="model-list-name">Grok 3</span></div>
             </div>
         </aside>
         <main class="chat-area">
@@ -156,7 +166,7 @@
                 <div class="context-panel">
                     <div class="context-header"><span class="context-icon">🧠</span><span class="context-title">Hive Mind Active</span></div>
                     <div class="context-items">
-                        <div class="context-item">MCP Gateway: <span id="toolCount">200+</span> tools</div>
+                        <div class="context-item" onclick="showMCPDetails()" style="cursor:pointer;text-decoration:underline">MCP Gateway: <span id="toolCount">Loading...</span></div>
                         <div class="context-item">Session: <span id="sessionId">--</span></div>
                     </div>
                 </div>
@@ -166,7 +176,21 @@
                     <div class="input-wrapper">
                         <textarea class="input-field" id="inputField" placeholder="Message ABBI..." rows="1" onkeydown="handleKey(event)"></textarea>
                         <div class="input-actions">
-                            <button class="input-action-btn">📎</button>
+                            <div class="upload-menu-container">
+                                <button class="input-action-btn" onclick="toggleUploadMenu()" id="uploadBtn">➕</button>
+                                <div class="upload-menu" id="uploadMenu">
+                                    <div class="upload-option" onclick="handleUploadFile()">
+                                        <span>📄</span><span>Upload file</span>
+                                    </div>
+                                    <div class="upload-option" onclick="handleTakePicture()">
+                                        <span>📷</span><span>Take a picture</span>
+                                    </div>
+                                    <div class="upload-option" onclick="handleTakeScreenshot()">
+                                        <span>🖼️</span><span>Take a screenshot</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <input type="file" id="fileInput" style="display:none" onchange="handleFileSelect(event)" />
                             <button class="input-action-btn">🎤</button>
                             <button class="send-btn" id="sendBtn" onclick="sendMessage()">➤</button>
                         </div>
@@ -179,7 +203,7 @@
             <div class="artifact-content">
                 <div class="stats-grid">
                     <div class="stat-card"><div class="stat-value">200+</div><div class="stat-label">Tools</div></div>
-                    <div class="stat-card"><div class="stat-value">6</div><div class="stat-label">Models</div></div>
+                    <div class="stat-card"><div class="stat-value">10</div><div class="stat-label">Models</div></div>
                 </div>
             </div>
         </aside>
@@ -188,17 +212,51 @@
         <div class="model-picker-overlay" onclick="closeModelPicker()"></div>
         <div class="model-picker-content">
             <div class="model-picker-header"><span class="model-picker-title">Select Model</span><button class="model-picker-close" onclick="closeModelPicker()">×</button></div>
-            <div class="model-picker-item selected" onclick="selectModelFromPicker('claude')"><div class="model-picker-dot" style="background:var(--claude-color)"></div><div><div class="model-picker-name">Claude Opus 4.5 ⭐</div><div class="model-picker-desc">Most capable</div></div></div>
-            <div class="model-picker-item" onclick="selectModelFromPicker('gemini')"><div class="model-picker-dot" style="background:var(--gemini-color)"></div><div><div class="model-picker-name">Gemini 2.0</div><div class="model-picker-desc">Fast multimodal</div></div></div>
-            <div class="model-picker-item" onclick="selectModelFromPicker('gpt')"><div class="model-picker-dot" style="background:var(--gpt-color)"></div><div><div class="model-picker-name">GPT-4o</div><div class="model-picker-desc">Versatile</div></div></div>
-            <div class="model-picker-item" onclick="selectModelFromPicker('grok')"><div class="model-picker-dot" style="background:var(--grok-color)"></div><div><div class="model-picker-name">Grok 2</div><div class="model-picker-desc">Real-time</div></div></div>
-            <div class="model-picker-item" onclick="selectModelFromPicker('deepseek')"><div class="model-picker-dot" style="background:var(--deepseek-color)"></div><div><div class="model-picker-name">DeepSeek R1</div><div class="model-picker-desc">Reasoning</div></div></div>
+            <div class="model-picker-item selected" onclick="selectModelFromPicker('claude-opus')"><div class="model-picker-dot" style="background:var(--claude-color)"></div><div><div class="model-picker-name">Claude Opus 4.5 ⭐</div><div class="model-picker-desc">Most capable</div></div></div>
+            <div class="model-picker-item" onclick="selectModelFromPicker('claude-sonnet')"><div class="model-picker-dot" style="background:var(--claude-color)"></div><div><div class="model-picker-name">Claude Sonnet 4</div><div class="model-picker-desc">Balanced performance</div></div></div>
+            <div class="model-picker-item" onclick="selectModelFromPicker('claude-haiku')"><div class="model-picker-dot" style="background:var(--claude-color)"></div><div><div class="model-picker-name">Claude Haiku 3.5</div><div class="model-picker-desc">Fast & efficient</div></div></div>
+            <div class="model-picker-item" onclick="selectModelFromPicker('gpt-4o')"><div class="model-picker-dot" style="background:var(--gpt-color)"></div><div><div class="model-picker-name">GPT-4o</div><div class="model-picker-desc">Versatile</div></div></div>
+            <div class="model-picker-item" onclick="selectModelFromPicker('gpt-4o-mini')"><div class="model-picker-dot" style="background:var(--gpt-color)"></div><div><div class="model-picker-name">GPT-4o Mini</div><div class="model-picker-desc">Fast & cost-effective</div></div></div>
+            <div class="model-picker-item" onclick="selectModelFromPicker('o1')"><div class="model-picker-dot" style="background:var(--gpt-color)"></div><div><div class="model-picker-name">o1</div><div class="model-picker-desc">Advanced reasoning</div></div></div>
+            <div class="model-picker-item" onclick="selectModelFromPicker('gemini-2')"><div class="model-picker-dot" style="background:var(--gemini-color)"></div><div><div class="model-picker-name">Gemini 2.0 Flash</div><div class="model-picker-desc">Fast multimodal</div></div></div>
+            <div class="model-picker-item" onclick="selectModelFromPicker('gemini-1.5')"><div class="model-picker-dot" style="background:var(--gemini-color)"></div><div><div class="model-picker-name">Gemini 1.5 Pro</div><div class="model-picker-desc">Long context</div></div></div>
+            <div class="model-picker-item" onclick="selectModelFromPicker('grok-3')"><div class="model-picker-dot" style="background:var(--grok-color)"></div><div><div class="model-picker-name">Grok 3</div><div class="model-picker-desc">Latest xAI</div></div></div>
+            <div class="model-picker-item" onclick="selectModelFromPicker('grok-2')"><div class="model-picker-dot" style="background:var(--grok-color)"></div><div><div class="model-picker-name">Grok 2</div><div class="model-picker-desc">Real-time data</div></div></div>
+        </div>
+    </div>
+    <div class="model-picker" id="mcpModal">
+        <div class="model-picker-overlay" onclick="closeMCPModal()"></div>
+        <div class="model-picker-content">
+            <div class="model-picker-header"><span class="model-picker-title">MCP Gateway Status</span><button class="model-picker-close" onclick="closeMCPModal()">×</button></div>
+            <div id="mcpServerList" style="max-height:400px;overflow-y:auto"></div>
         </div>
     </div>
 <script>
-const MODELS={claude:{name:'Claude Opus 4.5',color:'var(--claude-color)'},gemini:{name:'Gemini 2.0',color:'var(--gemini-color)'},gpt:{name:'GPT-4o',color:'var(--gpt-color)'},grok:{name:'Grok 2',color:'var(--grok-color)'},deepseek:{name:'DeepSeek R1',color:'var(--deepseek-color)'}};
-const MODEL_API_IDS={claude:'claude-opus-4-5-20251101',gemini:'gemini-2.0-flash-exp',gpt:'gpt-4o',grok:'grok-2-1212',deepseek:'deepseek-reasoner'};
-let state={model:'claude',sessionId:'ABBI-'+Math.random().toString(36).substr(2,8).toUpperCase(),history:[]};
+const MODELS={
+  'claude-opus':  {name:'Claude Opus 4.5',color:'var(--claude-color)',provider:'anthropic'},
+  'claude-sonnet':{name:'Claude Sonnet 4',color:'var(--claude-color)',provider:'anthropic'},
+  'claude-haiku': {name:'Claude Haiku 3.5',color:'var(--claude-color)',provider:'anthropic'},
+  'gpt-4o':       {name:'GPT-4o',color:'var(--gpt-color)',provider:'openai'},
+  'gpt-4o-mini':  {name:'GPT-4o Mini',color:'var(--gpt-color)',provider:'openai'},
+  'o1':           {name:'o1',color:'var(--gpt-color)',provider:'openai'},
+  'gemini-2':     {name:'Gemini 2.0 Flash',color:'var(--gemini-color)',provider:'google'},
+  'gemini-1.5':   {name:'Gemini 1.5 Pro',color:'var(--gemini-color)',provider:'google'},
+  'grok-3':       {name:'Grok 3',color:'var(--grok-color)',provider:'xai'},
+  'grok-2':       {name:'Grok 2',color:'var(--grok-color)',provider:'xai'}
+};
+const MODEL_API_IDS={
+  'claude-opus':'claude-opus-4-5-20251101',
+  'claude-sonnet':'claude-sonnet-4-20250514',
+  'claude-haiku':'claude-3-5-haiku-20241022',
+  'gpt-4o':'gpt-4o',
+  'gpt-4o-mini':'gpt-4o-mini',
+  'o1':'o1',
+  'gemini-2':'gemini-2.0-flash-exp',
+  'gemini-1.5':'gemini-1.5-pro',
+  'grok-3':'grok-3',
+  'grok-2':'grok-2-1212'
+};
+let state={model:'claude-opus',sessionId:'ABBI-'+Math.random().toString(36).substr(2,8).toUpperCase(),history:[]};
 document.addEventListener('DOMContentLoaded',()=>{document.getElementById('sessionId').textContent=state.sessionId;document.getElementById('inputField').addEventListener('input',function(){this.style.height='auto';this.style.height=Math.min(this.scrollHeight,120)+'px'});addWelcome()});
 function toggleSidebar(){document.getElementById('sidebar').classList.toggle('open');document.getElementById('sidebarOverlay').classList.toggle('open')}
 function openModelPicker(){if(window.innerWidth<=768)document.getElementById('modelPicker').classList.add('open')}
@@ -263,7 +321,28 @@ function displayConversationList(conversations){const chatList=document.querySel
 async function loadConversation(conversationId){try{const response=await fetch(`/api/conversations/${conversationId}`);const data=await response.json();if(data.messages){document.getElementById('messages').innerHTML='';state.history=[];state.sessionId=conversationId;document.getElementById('sessionId').textContent=conversationId;data.messages.forEach(msg=>{addMessage(msg.role==='user'?'user':'ai',msg.content,false);state.history.push({role:msg.role,content:msg.content})});document.querySelectorAll('.chat-item').forEach(item=>item.classList.remove('active'));document.querySelector(`[onclick*="${conversationId}"]`)?.classList.add('active');toggleSidebar()}}catch(error){console.error('Failed to load conversation:',error);addMessage('ai','Error: Could not load conversation')}}
 async function saveConversation(){if(state.history.length===0)return;try{const firstUserMsg=state.history.find(m=>m.role==='user');const title=firstUserMsg?firstUserMsg.content.substring(0,50)+(firstUserMsg.content.length>50?'...':''):'New Chat';await fetch('/api/conversations/save',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({conversationId:state.sessionId,messages:state.history,title:title})});loadConversationList()}catch(error){console.error('Failed to save conversation:',error)}}
 function formatTime(timestamp){const date=new Date(timestamp);const now=new Date();const diffDays=Math.floor((now-date)/(1000*60*60*24));if(diffDays===0)return'Today';if(diffDays===1)return'Yesterday';if(diffDays<7)return`${diffDays} days ago`;return date.toLocaleDateString()}
-window.addEventListener('DOMContentLoaded',()=>{loadConversationList()});
+window.addEventListener('DOMContentLoaded',()=>{loadConversationList();loadFolders()});
+
+// Folder Management Functions
+async function createFolder(){const folderName=prompt('Enter folder name:');if(!folderName||folderName.trim()==='')return;try{const response=await fetch('/api/folders/create',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:folderName.trim(),icon:'📁'})});if(response.ok){loadFolders()}}catch(error){console.error('Failed to create folder:',error);alert('Error creating folder')}}
+async function loadFolders(){try{const response=await fetch('/api/folders/list');const data=await response.json();if(data.folders){displayFolders(data.folders)}}catch(error){console.error('Failed to load folders:',error)}}
+function displayFolders(folders){const folderList=document.getElementById('folderList');if(!folderList)return;folderList.innerHTML='';folders.forEach(folder=>{const folderItem=document.createElement('div');folderItem.className='space-item';folderItem.onclick=()=>{toggleSidebar()};folderItem.innerHTML=`<span class="space-icon">${folder.ICON||'📁'}</span><span class="space-name">${folder.NAME}</span>`;folderList.appendChild(folderItem)})}
+
+// Upload Menu Functions
+function toggleUploadMenu(){const menu=document.getElementById('uploadMenu');menu.classList.toggle('open')}
+function handleUploadFile(){document.getElementById('fileInput').click();toggleUploadMenu()}
+function handleTakePicture(){alert('Camera functionality coming soon');toggleUploadMenu()}
+function handleTakeScreenshot(){alert('Screenshot functionality coming soon');toggleUploadMenu()}
+function handleFileSelect(event){const file=event.target.files[0];if(file){console.log('File selected:',file.name);alert('File upload: '+file.name+' (Processing coming soon)')}}
+document.addEventListener('click',function(e){const menu=document.getElementById('uploadMenu');const btn=document.getElementById('uploadBtn');if(menu&&!menu.contains(e.target)&&e.target!==btn){menu.classList.remove('open')}})
+
+// MCP Gateway Functions
+let mcpStatus={servers:[],totalTools:0};
+async function loadMCPStatus(){try{const response=await fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({messages:[{role:'user',content:'mcp status'}],model:'claude-opus-4-5-20251101',max_tokens:100})});if(response.ok){const reader=response.body.getReader();const decoder=new TextDecoder();let buffer='';while(true){const{done,value}=await reader.read();if(done)break;buffer+=decoder.decode(value,{stream:true});const lines=buffer.split('\n');buffer=lines.pop();for(const line of lines){if(line.startsWith('data: ')){const data=JSON.parse(line.substring(6));if(data.type==='content_block_delta'&&data.delta?.text){const text=data.delta.text;const toolMatch=text.match(/(\d+)\+?\s+tools/i);if(toolMatch){mcpStatus.totalTools=parseInt(toolMatch[1]);document.getElementById('toolCount').textContent=mcpStatus.totalTools+' tools'}}}}}}}catch(error){console.error('Failed to load MCP status:',error);document.getElementById('toolCount').textContent='200+ tools'}}
+function showMCPDetails(){document.getElementById('mcpModal').classList.add('open');displayMCPServers()}
+function closeMCPModal(){document.getElementById('mcpModal').classList.remove('open')}
+function displayMCPServers(){const serverList=document.getElementById('mcpServerList');serverList.innerHTML='<div style="padding:16px;text-align:center;color:var(--text-muted)">Loading MCP servers...</div>';fetch('https://mcp-gateway.abbi-ai.com/status').then(r=>r.json()).then(data=>{serverList.innerHTML='';if(data.backends){Object.entries(data.backends).forEach(([name,info])=>{const serverDiv=document.createElement('div');serverDiv.style.cssText='padding:12px;margin:8px 0;background:var(--primary-700);border-radius:8px;cursor:pointer';serverDiv.innerHTML=`<div style="font-weight:600;margin-bottom:4px">${name}</div><div style="font-size:12px;color:var(--text-muted)">Status: ${info.status||'unknown'}</div>`;serverDiv.onclick=()=>showServerTools(name);serverList.appendChild(serverDiv)})}}).catch(()=>{serverList.innerHTML='<div style="padding:16px;text-align:center;color:var(--text-muted)">Unable to load MCP servers</div>'})}
+function showServerTools(serverName){alert(`Tools for ${serverName} - detailed view coming soon`)}
 </script>
 </body>
 </html>

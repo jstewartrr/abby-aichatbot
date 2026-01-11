@@ -211,31 +211,105 @@ Escalate to john_claude (Claude Opus 4.5) for: complex analysis, document creati
 Execute with precision, Your Grace's intent is your directive.`;
 
     // =========================================================================
-    // CALL ANTHROPIC API
+    // DETECT PROVIDER AND ROUTE TO APPROPRIATE API
     // =========================================================================
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': process.env.ANTHROPIC_API_KEY,
-        'anthropic-version': '2023-06-01'
-      },
-      body: JSON.stringify({
-        model: model || 'claude-sonnet-4-20250514',
-        max_tokens: max_tokens || 4096,
-        system: system || abbiSystemPrompt,
-        messages: messages || [],
-        ...(temperature ? { temperature } : {}),
-        ...(tools && tools.length > 0 ? { tools } : {})
-      })
-    });
+    const modelLower = (model || 'claude-opus-4-5-20251101').toLowerCase();
+    let response;
+
+    if (modelLower.includes('claude')) {
+      // Anthropic API
+      response = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': process.env.ANTHROPIC_API_KEY,
+          'anthropic-version': '2023-06-01'
+        },
+        body: JSON.stringify({
+          model: model || 'claude-opus-4-5-20251101',
+          max_tokens: max_tokens || 4096,
+          system: system || abbiSystemPrompt,
+          messages: messages || [],
+          ...(temperature ? { temperature } : {}),
+          ...(tools && tools.length > 0 ? { tools } : {})
+        })
+      });
+    } else if (modelLower.includes('gpt') || modelLower.includes('o1')) {
+      // OpenAI API
+      const openaiMessages = [{role: 'system', content: system || abbiSystemPrompt}, ...messages];
+      response = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`
+        },
+        body: JSON.stringify({
+          model: model || 'gpt-4o',
+          max_tokens: max_tokens || 4096,
+          messages: openaiMessages,
+          ...(temperature ? { temperature } : {})
+        })
+      });
+    } else if (modelLower.includes('gemini')) {
+      // Google Gemini API
+      const geminiMessages = messages.map(m => ({
+        role: m.role === 'user' ? 'user' : 'model',
+        parts: [{text: m.content}]
+      }));
+      response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${process.env.GOOGLE_API_KEY}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: geminiMessages,
+          systemInstruction: { parts: [{text: system || abbiSystemPrompt}] },
+          generationConfig: {
+            maxOutputTokens: max_tokens || 4096,
+            ...(temperature ? { temperature } : {})
+          }
+        })
+      });
+    } else if (modelLower.includes('grok')) {
+      // xAI Grok API
+      const grokMessages = [{role: 'system', content: system || abbiSystemPrompt}, ...messages];
+      response = await fetch('https://api.x.ai/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${process.env.XAI_API_KEY}`
+        },
+        body: JSON.stringify({
+          model: model || 'grok-2-1212',
+          max_tokens: max_tokens || 4096,
+          messages: grokMessages,
+          ...(temperature ? { temperature } : {})
+        })
+      });
+    } else {
+      // Default to Claude
+      response = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': process.env.ANTHROPIC_API_KEY,
+          'anthropic-version': '2023-06-01'
+        },
+        body: JSON.stringify({
+          model: 'claude-opus-4-5-20251101',
+          max_tokens: max_tokens || 4096,
+          system: system || abbiSystemPrompt,
+          messages: messages || [],
+          ...(temperature ? { temperature } : {}),
+          ...(tools && tools.length > 0 ? { tools } : {})
+        })
+      });
+    }
 
     const data = await response.json();
-    
+
     if (!response.ok) {
       return res.status(response.status).json(data);
     }
-    
+
     return res.status(200).json(data);
   } catch (error) {
     console.error('Chat API error:', error);
