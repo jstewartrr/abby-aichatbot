@@ -284,6 +284,39 @@ Execute with precision, Your Grace's intent is your directive.`;
           ...(temperature ? { temperature } : {})
         })
       });
+    } else if (modelLower.includes('nova') || modelLower.includes('bedrock')) {
+      // AWS Bedrock API (via Anthropic-compatible interface)
+      response = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': process.env.ANTHROPIC_API_KEY,
+          'anthropic-version': '2023-06-01'
+        },
+        body: JSON.stringify({
+          model: model || 'amazon.nova-pro-v1:0',
+          max_tokens: max_tokens || 4096,
+          system: system || abbiSystemPrompt,
+          messages: messages || [],
+          ...(temperature ? { temperature } : {})
+        })
+      });
+    } else if (modelLower.includes('copilot')) {
+      // GitHub Copilot (uses OpenAI API)
+      const copilotMessages = [{role: 'system', content: system || abbiSystemPrompt}, ...messages];
+      response = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`
+        },
+        body: JSON.stringify({
+          model: 'gpt-4o',
+          max_tokens: max_tokens || 4096,
+          messages: copilotMessages,
+          ...(temperature ? { temperature } : {})
+        })
+      });
     } else {
       // Default to Claude
       response = await fetch('https://api.anthropic.com/v1/messages', {

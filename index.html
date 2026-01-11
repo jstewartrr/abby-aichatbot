@@ -125,9 +125,10 @@
                 <div class="logo"><div class="logo-icon">AI</div><span class="logo-text">ABBI-AI</span></div>
             </div>
             <nav class="header-nav">
-                <button class="nav-btn active">Chat</button>
-                <button class="nav-btn">Research</button>
-                <button class="nav-btn">Spaces</button>
+                <button class="nav-btn active" onclick="switchTab('chat')">Model Chat</button>
+                <button class="nav-btn" onclick="switchTab('image')">Image Generation</button>
+                <button class="nav-btn" onclick="switchTab('folders')">Folders</button>
+                <button class="nav-btn" onclick="switchTab('session')">Session Tracker</button>
             </nav>
             <div class="header-actions">
                 <div class="model-selector" onclick="openModelPicker()">
@@ -162,12 +163,38 @@
             </div>
         </aside>
         <main class="chat-area">
-            <div class="chat-messages" id="messages">
-                <div class="context-panel">
-                    <div class="context-header"><span class="context-icon">🧠</span><span class="context-title">Hive Mind Active</span></div>
-                    <div class="context-items">
-                        <div class="context-item" onclick="showMCPDetails()" style="cursor:pointer;text-decoration:underline">MCP Gateway: <span id="toolCount">Loading...</span></div>
-                        <div class="context-item">Session: <span id="sessionId">--</span></div>
+            <div class="tab-content" id="chatTab">
+                <div class="chat-messages" id="messages">
+                    <div class="context-panel">
+                        <div class="context-header"><span class="context-icon">🧠</span><span class="context-title">Hive Mind Active</span></div>
+                        <div class="context-items">
+                            <div class="context-item" onclick="showMCPDetails()" style="cursor:pointer;text-decoration:underline">MCP Gateway: <span id="toolCount">Loading...</span></div>
+                            <div class="context-item">Session: <span id="sessionId">--</span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="tab-content" id="imageTab" style="display:none">
+                <div class="chat-messages">
+                    <div style="padding:40px;text-align:center">
+                        <h2 style="margin-bottom:16px">Image Generation</h2>
+                        <p style="color:var(--text-muted)">AI image generation coming soon</p>
+                    </div>
+                </div>
+            </div>
+            <div class="tab-content" id="foldersTab" style="display:none">
+                <div class="chat-messages">
+                    <div style="padding:40px">
+                        <h2 style="margin-bottom:16px">Folder Management</h2>
+                        <div id="folderManagement" style="color:var(--text-muted)">Loading folders...</div>
+                    </div>
+                </div>
+            </div>
+            <div class="tab-content" id="sessionTab" style="display:none">
+                <div class="chat-messages">
+                    <div style="padding:40px">
+                        <h2 style="margin-bottom:16px">Session Tracker</h2>
+                        <div id="sessionTracker" style="color:var(--text-muted)">Loading session data...</div>
                     </div>
                 </div>
             </div>
@@ -203,7 +230,7 @@
             <div class="artifact-content">
                 <div class="stats-grid">
                     <div class="stat-card"><div class="stat-value">200+</div><div class="stat-label">Tools</div></div>
-                    <div class="stat-card"><div class="stat-value">10</div><div class="stat-label">Models</div></div>
+                    <div class="stat-card"><div class="stat-value">11</div><div class="stat-label">Models</div></div>
                 </div>
             </div>
         </aside>
@@ -214,14 +241,15 @@
             <div class="model-picker-header"><span class="model-picker-title">Select Model</span><button class="model-picker-close" onclick="closeModelPicker()">×</button></div>
             <div class="model-picker-item selected" onclick="selectModelFromPicker('claude-opus')"><div class="model-picker-dot" style="background:var(--claude-color)"></div><div><div class="model-picker-name">Claude Opus 4.5 ⭐</div><div class="model-picker-desc">Most capable</div></div></div>
             <div class="model-picker-item" onclick="selectModelFromPicker('claude-sonnet')"><div class="model-picker-dot" style="background:var(--claude-color)"></div><div><div class="model-picker-name">Claude Sonnet 4</div><div class="model-picker-desc">Balanced performance</div></div></div>
-            <div class="model-picker-item" onclick="selectModelFromPicker('claude-haiku')"><div class="model-picker-dot" style="background:var(--claude-color)"></div><div><div class="model-picker-name">Claude Haiku 3.5</div><div class="model-picker-desc">Fast & efficient</div></div></div>
             <div class="model-picker-item" onclick="selectModelFromPicker('gpt-4o')"><div class="model-picker-dot" style="background:var(--gpt-color)"></div><div><div class="model-picker-name">GPT-4o</div><div class="model-picker-desc">Versatile</div></div></div>
             <div class="model-picker-item" onclick="selectModelFromPicker('gpt-4o-mini')"><div class="model-picker-dot" style="background:var(--gpt-color)"></div><div><div class="model-picker-name">GPT-4o Mini</div><div class="model-picker-desc">Fast & cost-effective</div></div></div>
             <div class="model-picker-item" onclick="selectModelFromPicker('o1')"><div class="model-picker-dot" style="background:var(--gpt-color)"></div><div><div class="model-picker-name">o1</div><div class="model-picker-desc">Advanced reasoning</div></div></div>
             <div class="model-picker-item" onclick="selectModelFromPicker('gemini-2')"><div class="model-picker-dot" style="background:var(--gemini-color)"></div><div><div class="model-picker-name">Gemini 2.0 Flash</div><div class="model-picker-desc">Fast multimodal</div></div></div>
             <div class="model-picker-item" onclick="selectModelFromPicker('gemini-1.5')"><div class="model-picker-dot" style="background:var(--gemini-color)"></div><div><div class="model-picker-name">Gemini 1.5 Pro</div><div class="model-picker-desc">Long context</div></div></div>
             <div class="model-picker-item" onclick="selectModelFromPicker('grok-3')"><div class="model-picker-dot" style="background:var(--grok-color)"></div><div><div class="model-picker-name">Grok 3</div><div class="model-picker-desc">Latest xAI</div></div></div>
-            <div class="model-picker-item" onclick="selectModelFromPicker('grok-2')"><div class="model-picker-dot" style="background:var(--grok-color)"></div><div><div class="model-picker-name">Grok 2</div><div class="model-picker-desc">Real-time data</div></div></div>
+            <div class="model-picker-item" onclick="selectModelFromPicker('nova-pro')"><div class="model-picker-dot" style="background:#FF9900"></div><div><div class="model-picker-name">Amazon Nova Pro</div><div class="model-picker-desc">AWS Bedrock</div></div></div>
+            <div class="model-picker-item" onclick="selectModelFromPicker('nova-lite')"><div class="model-picker-dot" style="background:#FF9900"></div><div><div class="model-picker-name">Amazon Nova Lite</div><div class="model-picker-desc">Fast AWS model</div></div></div>
+            <div class="model-picker-item" onclick="selectModelFromPicker('copilot')"><div class="model-picker-dot" style="background:#6e40c9"></div><div><div class="model-picker-name">GitHub Copilot</div><div class="model-picker-desc">Code assistant</div></div></div>
         </div>
     </div>
     <div class="model-picker" id="mcpModal">
@@ -235,32 +263,38 @@
 const MODELS={
   'claude-opus':  {name:'Claude Opus 4.5',color:'var(--claude-color)',provider:'anthropic'},
   'claude-sonnet':{name:'Claude Sonnet 4',color:'var(--claude-color)',provider:'anthropic'},
-  'claude-haiku': {name:'Claude Haiku 3.5',color:'var(--claude-color)',provider:'anthropic'},
   'gpt-4o':       {name:'GPT-4o',color:'var(--gpt-color)',provider:'openai'},
   'gpt-4o-mini':  {name:'GPT-4o Mini',color:'var(--gpt-color)',provider:'openai'},
   'o1':           {name:'o1',color:'var(--gpt-color)',provider:'openai'},
   'gemini-2':     {name:'Gemini 2.0 Flash',color:'var(--gemini-color)',provider:'google'},
   'gemini-1.5':   {name:'Gemini 1.5 Pro',color:'var(--gemini-color)',provider:'google'},
   'grok-3':       {name:'Grok 3',color:'var(--grok-color)',provider:'xai'},
-  'grok-2':       {name:'Grok 2',color:'var(--grok-color)',provider:'xai'}
+  'nova-pro':     {name:'Amazon Nova Pro',color:'#FF9900',provider:'bedrock'},
+  'nova-lite':    {name:'Amazon Nova Lite',color:'#FF9900',provider:'bedrock'},
+  'copilot':      {name:'GitHub Copilot',color:'#6e40c9',provider:'openai'}
 };
 const MODEL_API_IDS={
   'claude-opus':'claude-opus-4-5-20251101',
   'claude-sonnet':'claude-sonnet-4-20250514',
-  'claude-haiku':'claude-3-5-haiku-20241022',
   'gpt-4o':'gpt-4o',
   'gpt-4o-mini':'gpt-4o-mini',
   'o1':'o1',
   'gemini-2':'gemini-2.0-flash-exp',
   'gemini-1.5':'gemini-1.5-pro',
   'grok-3':'grok-3',
-  'grok-2':'grok-2-1212'
+  'grok-2':'grok-2-1212',
+  'nova-pro':'amazon.nova-pro-v1:0',
+  'nova-lite':'amazon.nova-lite-v1:0',
+  'copilot':'gpt-4o'
 };
 let state={model:'claude-opus',sessionId:'ABBI-'+Math.random().toString(36).substr(2,8).toUpperCase(),history:[]};
 document.addEventListener('DOMContentLoaded',()=>{document.getElementById('sessionId').textContent=state.sessionId;document.getElementById('inputField').addEventListener('input',function(){this.style.height='auto';this.style.height=Math.min(this.scrollHeight,120)+'px'});addWelcome()});
 function toggleSidebar(){document.getElementById('sidebar').classList.toggle('open');document.getElementById('sidebarOverlay').classList.toggle('open')}
 function openModelPicker(){if(window.innerWidth<=768)document.getElementById('modelPicker').classList.add('open')}
 function closeModelPicker(){document.getElementById('modelPicker').classList.remove('open')}
+function switchTab(tabName){document.querySelectorAll('.tab-content').forEach(t=>t.style.display='none');document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));const tabs={chat:'chatTab',image:'imageTab',folders:'foldersTab',session:'sessionTab'};document.getElementById(tabs[tabName]).style.display='block';event.target.classList.add('active');if(tabName==='folders'){loadFolderManagement()}else if(tabName==='session'){loadSessionTracker()}}
+function loadFolderManagement(){fetch('/api/folders/list').then(r=>r.json()).then(data=>{const container=document.getElementById('folderManagement');container.innerHTML='<div style="margin-bottom:20px"><button class="new-chat-btn" onclick="createFolder();setTimeout(loadFolderManagement,500)">📁 Create New Folder</button></div>';if(data.folders&&data.folders.length>0){data.folders.forEach(f=>{container.innerHTML+=`<div style="padding:12px;background:var(--primary-700);border-radius:8px;margin:8px 0">${f.ICON||'📁'} ${f.NAME}</div>`})}else{container.innerHTML+='<p>No folders yet. Create your first folder!</p>'}}).catch(()=>{document.getElementById('folderManagement').innerHTML='<p>Unable to load folders</p>'})}
+function loadSessionTracker(){const container=document.getElementById('sessionTracker');container.innerHTML=`<div style="margin-bottom:20px"><strong>Current Session:</strong> ${state.sessionId}</div><div style="margin-bottom:20px"><strong>Messages in Session:</strong> ${state.history.length}</div><div style="margin-bottom:20px"><strong>Current Model:</strong> ${MODELS[state.model]?.name||'Unknown'}</div><div style="padding:12px;background:var(--primary-700);border-radius:8px"><div style="margin-bottom:8px;font-weight:600">Session History:</div>${state.history.map((m,i)=>`<div style="padding:8px;border-left:2px solid ${m.role==='user'?'var(--accent-primary)':'var(--accent-secondary)'};margin:4px 0;font-size:13px">${i+1}. ${m.role}: ${m.content.substring(0,100)}${m.content.length>100?'...':''}</div>`).join('')||'<div style="color:var(--text-muted)">No messages yet</div>'}</div>`}
 function selectModelFromPicker(m){selectModel(m);document.querySelectorAll('.model-picker-item').forEach(i=>i.classList.toggle('selected',i.querySelector('.model-picker-name').textContent.includes(MODELS[m].name)));closeModelPicker()}
 function selectModel(m){state.model=m;document.getElementById('modelDot').style.background=MODELS[m].color;document.getElementById('modelLabel').textContent=MODELS[m].name}
 function addWelcome(){addMessage('ai','Welcome back, Your Grace. I\'m ABBI.\n\nI have access to <strong>200+ tools</strong> via the MCP Gateway.\n\nHow may I assist you today?')}
