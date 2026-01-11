@@ -197,6 +197,7 @@
     </div>
 <script>
 const MODELS={claude:{name:'Claude Opus 4.5',color:'var(--claude-color)'},gemini:{name:'Gemini 2.0',color:'var(--gemini-color)'},gpt:{name:'GPT-4o',color:'var(--gpt-color)'},grok:{name:'Grok 2',color:'var(--grok-color)'},deepseek:{name:'DeepSeek R1',color:'var(--deepseek-color)'}};
+const MODEL_API_IDS={claude:'claude-opus-4-5-20251101',gemini:'gemini-2.0-flash-exp',gpt:'gpt-4o',grok:'grok-2-1212',deepseek:'deepseek-reasoner'};
 let state={model:'claude',sessionId:'ABBI-'+Math.random().toString(36).substr(2,8).toUpperCase(),history:[]};
 document.addEventListener('DOMContentLoaded',()=>{document.getElementById('sessionId').textContent=state.sessionId;document.getElementById('inputField').addEventListener('input',function(){this.style.height='auto';this.style.height=Math.min(this.scrollHeight,120)+'px'});addWelcome()});
 function toggleSidebar(){document.getElementById('sidebar').classList.toggle('open');document.getElementById('sidebarOverlay').classList.toggle('open')}
@@ -224,7 +225,7 @@ async function sendMessage(){
             method:'POST',
             headers:{'Content-Type':'application/json'},
             body:JSON.stringify({
-                model:'claude-sonnet-4-20250514',
+                model:MODEL_API_IDS[state.model]||'claude-opus-4-5-20251101',
                 max_tokens:4096,
                 messages:state.history.slice(-10)
             })
