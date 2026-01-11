@@ -123,15 +123,26 @@ mcpServers:
     initTimeout: 30000
     serverInstructions: true
 
-  "CV CM Load Balanced MCP 20260106":
+  "CV SM Azure CLI 20260105":
     type: streamable-http
-    url: "https://mcp.abbi-ai.com/mcp"
+    url: "https://cv-sm-azure-cli-20260105.lemoncoast-87756bcf.eastus.azurecontainerapps.io/mcp"
     timeout: 60000
     initTimeout: 30000
     serverInstructions: true
 
-  "CV SM Azure CLI 20260105":
+  "SM MCP Gateway West":
     type: streamable-http
+    url: "https://sm-mcp-gateway-west.nicecliff-a1c1a3b6.westus2.azurecontainerapps.io/mcp"
+    timeout: 60000
+    initTimeout: 30000
+    serverInstructions: true
+
+  "CV SM Gateway Backup 20260105":
+    type: streamable-http
+    url: "https://cv-sm-gateway-20260105.lemoncoast-87756bcf.eastus.azurecontainerapps.io/mcp"
+    timeout: 60000
+    initTimeout: 30000
+    serverInstructions: true
     url: "https://cv-sm-azure-cli-20260105.lemoncoast-87756bcf.eastus.azurecontainerapps.io/mcp"
     timeout: 60000
     initTimeout: 30000
